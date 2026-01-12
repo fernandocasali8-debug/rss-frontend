@@ -127,41 +127,44 @@ const BetaTeaser = ({ onLogin }) => (
       <div className="beta-brand">
         <div className="beta-logo">RN</div>
         <div>
-          <div className="beta-title">Radar de Noticias</div>
+          <div className="beta-title">Radar de Notícias</div>
           <div className="beta-subtitle">Beta aberto para testes</div>
         </div>
       </div>
       <div className="beta-copy">
-        <h2>Monitoramento editorial sem ruido</h2>
+        <h2>Monitoramento editorial sem ruído</h2>
         <p>
-          Esta pagina mostra apenas uma amostra. Entre para ver a linha do tempo
-          completa e salvar noticias.
+          Esta página mostra apenas uma amostra. Entre para ver a linha do tempo
+          completa e salvar notícias.
         </p>
       </div>
       <div className="beta-actions">
         <button type="button" className="beta-cta" onClick={onLogin}>
           Entrar com Google
         </button>
-        <div className="beta-note">Acesso completo liberado apos login.</div>
+        <a className="beta-cta secondary" href="/noticias">
+          Ver amostra pública
+        </a>
+        <div className="beta-note">Acesso completo liberado após login.</div>
       </div>
     </div>
     <div className="beta-grid">
       <div className="beta-card">
         <div className="beta-card-title">Alertas em tempo real</div>
         <div className="beta-card-body">
-          Receba sinais rapidos sobre temas criticos e reaja antes do mercado.
+          Receba sinais rápidos sobre temas críticos e reaja antes do mercado.
         </div>
       </div>
       <div className="beta-card">
         <div className="beta-card-title">Curadoria inteligente</div>
         <div className="beta-card-body">
-          Filtros, tags e fontes relevantes com criterio editorial.
+          Filtros, tags e fontes relevantes com critério editorial.
         </div>
       </div>
       <div className="beta-card">
-        <div className="beta-card-title">Colecao de salvos</div>
+        <div className="beta-card-title">Coleção de salvos</div>
         <div className="beta-card-body">
-          Organize noticias por tema e compartilhe com o time.
+          Organize notícias por tema e compartilhe com o time.
         </div>
       </div>
     </div>

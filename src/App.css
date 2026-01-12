@@ -1,4 +1,6 @@
-﻿.dashboard-container {
+﻿@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap');
+
+.dashboard-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -785,4 +787,45 @@ h3 {
   font-size: 13px;
   color: #cbd5f5;
   line-height: 1.5;
+}
+
+/* beta-typography */
+.beta-landing {
+  font-family: "Manrope", sans-serif;
+}
+
+.beta-title,
+.beta-copy h2,
+.beta-card-title {
+  font-family: "Sora", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.beta-copy p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.beta-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.beta-cta {
+  text-decoration: none;
+}
+
+.beta-cta.secondary {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #e2e8f0;
+}
+
+@media (min-width: 900px) {
+  .beta-hero {
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: center;
+  }
 }
