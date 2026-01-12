@@ -1,0 +1,68 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5f3ef;
+  --bg-2: #eef4f2;
+  --surface: #ffffff;
+  --surface-2: #f8f7f4;
+  --ink: #1e242b;
+  --muted: #5c6672;
+  --accent: #1f7a6c;
+  --accent-strong: #185e53;
+  --accent-warm: #e59745;
+  --border: #e5e1d8;
+  --shadow: 0 10px 30px rgba(23, 27, 36, 0.12);
+  --radius: 16px;
+  --font-ui: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-display: "Newsreader", "Times New Roman", serif;
+}
+
+[data-theme="dark"] {
+  --bg: #0e1115;
+  --bg-2: #1a1f26;
+  --surface: #181d24;
+  --surface-2: #222833;
+  --ink: #f2f4f6;
+  --muted: #a5b1c2;
+  --accent: #57c2b3;
+  --accent-strong: #3aa394;
+  --accent-warm: #f0b35c;
+  --border: #2a313b;
+  --shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(247,239,226,0.9) 0%, rgba(247,239,226,0) 60%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme="dark"] body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(67,86,112,0.35) 0%, rgba(67,86,112,0) 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(32,44,58,0.5) 0%, rgba(32,44,58,0) 60%),
+    linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+code {
+  font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+}

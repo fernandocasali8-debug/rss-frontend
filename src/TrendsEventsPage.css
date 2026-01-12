@@ -1,0 +1,238 @@
+.polymarket-page .trends-page-title {
+  font-size: 1.7rem;
+}
+
+.polymarket-meta {
+  align-items: center;
+}
+
+.polymarket-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.polymarket-topic-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.polymarket-topic-select select {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  min-width: 220px;
+}
+
+.polymarket-clear {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.polymarket-clear:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.polymarket-presets {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.polymarket-presets-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.polymarket-preset {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.polymarket-preset:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.polymarket-preset.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.polymarket-search input {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  min-width: 220px;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.polymarket-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.polymarket-grid.is-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.polymarket-grid.is-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.polymarket-grid.is-list {
+  grid-template-columns: 1fr;
+}
+
+.polymarket-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.polymarket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.polymarket-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.polymarket-badge {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--ink);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.polymarket-prob {
+  font-weight: 700;
+  color: #0f766e;
+  background: rgba(20, 184, 166, 0.12);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.polymarket-title {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.polymarket-source {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.polymarket-thermo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.polymarket-thermo-track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  background: linear-gradient(90deg, #f97316, #22c55e);
+  border-radius: 999px;
+}
+
+.polymarket-thermo-pointer {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0f172a;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 2px #fff, 0 4px 8px rgba(15, 23, 42, 0.2);
+}
+
+.polymarket-thermo-mid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  background: rgba(15, 23, 42, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+.polymarket-thermo-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.polymarket-prob-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.polymarket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1100px) {
+  .polymarket-grid.is-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .polymarket-grid.is-grid,
+  .polymarket-grid.is-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .polymarket-search input {
+    min-width: 160px;
+  }
+}

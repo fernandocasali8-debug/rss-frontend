@@ -1,0 +1,346 @@
+.trends-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trends-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trends-page-title {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.trends-page-subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.trends-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.trends-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trends-filter-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.trends-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.trends-filter-button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.trends-filter-button:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.trends-filter-button.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.trends-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.trends-drive-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trends-drive-select {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  min-width: 160px;
+}
+
+.trends-drive-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trends-drive-button.secondary {
+  background: transparent;
+}
+
+.trends-drive-button:hover {
+  background: var(--surface-2);
+}
+
+.trends-drive-button:disabled,
+.trends-drive-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.trends-refresh {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trends-refresh-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trends-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.trends-view-button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.trends-view-button:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.trends-view-button.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.trends-density-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.trends-density-button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.trends-density-button:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.trends-density-button.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.trends-density-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trends-refreshing {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.trends-refresh:hover {
+  background: var(--surface-2);
+}
+
+.trends-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.timeline-trends.is-list .timeline-trends-list {
+  grid-template-columns: 1fr;
+}
+
+.timeline-trends.is-columns .timeline-trends-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.timeline-trends.is-columns .timeline-trend-item {
+  align-items: flex-start;
+}
+
+.timeline-trends.is-grid .timeline-trend-title,
+.timeline-trends.is-columns .timeline-trend-title {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.timeline-trends.is-grid .timeline-trend-meta,
+.timeline-trends.is-columns .timeline-trend-meta {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.timeline-trends.is-list .timeline-trend-item {
+  align-items: stretch;
+  padding: 12px 14px;
+}
+
+.timeline-trends.is-list .timeline-trend-main {
+  width: 100%;
+  align-items: flex-start;
+}
+
+.timeline-trends.is-list .timeline-trend-title {
+  white-space: normal;
+}
+
+.timeline-trends.is-list .timeline-trend-meta {
+  align-self: flex-start;
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.timeline-trends.is-list .timeline-trend-explain {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.timeline-trends.is-compact .timeline-trend-item {
+  padding: 8px 10px;
+}
+
+.timeline-trends.is-compact .timeline-trend-title {
+  font-size: 0.95rem;
+}
+
+.timeline-trends.is-compact .timeline-trend-explain {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.timeline-trends.is-compact .timeline-trend-meta {
+  font-size: 0.78rem;
+}
+
+.timeline-trends.is-tight .timeline-trend-item {
+  padding: 6px 8px;
+  gap: 8px;
+}
+
+.timeline-trends.is-tight .timeline-trend-title {
+  font-size: 0.9rem;
+}
+
+.timeline-trends.is-tight .timeline-trend-meta {
+  font-size: 0.75rem;
+}
+
+.timeline-trends.is-tight .timeline-trend-explain {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .trends-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trends-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .trends-view-toggle {
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  .trends-density-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .timeline-trends.is-columns .timeline-trends-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .timeline-trends.is-columns .timeline-trends-list {
+    grid-template-columns: 1fr;
+  }
+}
+
