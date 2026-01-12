@@ -420,7 +420,7 @@ function MainApp({ initialPage, betaMode = false }) {
     if (rememberMe) {
       params.set('remember', '1');
     }
-    params.set('redirect', '/app');
+    params.set('redirect', isBeta ? '/beta' : '/app');
     window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
   };
 
@@ -443,7 +443,9 @@ function MainApp({ initialPage, betaMode = false }) {
       // ignore
     } finally {
       setAuthUser(null);
-      window.location.href = API_BASE + '/auth/google';
+      const params = new URLSearchParams();
+      params.set('redirect', isBeta ? '/beta' : '/app');
+      window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
     }
   };
 

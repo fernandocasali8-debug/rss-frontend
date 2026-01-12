@@ -476,8 +476,19 @@ export default function Timeline() {
 
   const fetchPosts = () => {
     apiFetch(API_BASE + '/aggregate')
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !Array.isArray(data)) {
+          setPosts([]);
+          setProgressiveLoading(false);
+          setLoading(false);
+          setNextRefreshAt(Date.now() + REFRESH_MS);
+          return [];
+        }
+        return data;
+      })
       .then(data => {
+        if (!Array.isArray(data)) return;
         setPosts(prev => {
           if (prev.length > 0 && data.length > 0 && data[0].link !== prev[0].link) {
             setNotifications(n => [
@@ -498,6 +509,12 @@ export default function Timeline() {
         }
         setVisibleCount(Math.min(INITIAL_BATCH, data.length));
         setProgressiveLoading(data.length > INITIAL_BATCH);
+        setLoading(false);
+        setNextRefreshAt(Date.now() + REFRESH_MS);
+      })
+      .catch(() => {
+        setPosts([]);
+        setProgressiveLoading(false);
         setLoading(false);
         setNextRefreshAt(Date.now() + REFRESH_MS);
       });
