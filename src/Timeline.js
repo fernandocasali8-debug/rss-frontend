@@ -8,6 +8,26 @@ const INITIAL_BATCH = 10;
 const BATCH_STEP = 10;
 const BATCH_DELAY_MS = 200;
 const BRT_TIMEZONE = 'America/Sao_Paulo';
+const promoItems = [
+  {
+    title: 'Monitoramento rapido de noticias em tempo real',
+    feedName: 'Radar de Noticias',
+    contentSnippet: 'Acompanhe os temas que importam com alertas e resumos prontos.',
+    tags: ['alertas', 'tempo real', 'resumo']
+  },
+  {
+    title: 'Painel com sinais de tendencia para decisao rapida',
+    feedName: 'Radar de Noticias',
+    contentSnippet: 'Indicadores de impacto, fontes relevantes e curadoria inteligente.',
+    tags: ['tendencias', 'curadoria', 'impacto']
+  },
+  {
+    title: 'Colecao de noticias salvas para seu time',
+    feedName: 'Radar de Noticias',
+    contentSnippet: 'Organize por assunto, marque e compartilhe com facilidade.',
+    tags: ['salvos', 'time', 'organizacao']
+  }
+];
 function formatHour(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -92,6 +112,7 @@ export default function Timeline() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
   const [progressiveLoading, setProgressiveLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [accessRestricted, setAccessRestricted] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [nextRefreshAt, setNextRefreshAt] = useState(Date.now() + REFRESH_MS);
   const [countdown, setCountdown] = useState(Math.ceil(REFRESH_MS / 1000));
@@ -474,17 +495,21 @@ export default function Timeline() {
     window.open(aiSelectedImage.regularUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const fetchPosts = () => {
+    const fetchPosts = () => {
     apiFetch(API_BASE + '/aggregate')
       .then(async (res) => {
         const data = await res.json().catch(() => null);
         if (!res.ok || !Array.isArray(data)) {
+          if (res.status === 401) {
+            setAccessRestricted(true);
+          }
           setPosts([]);
           setProgressiveLoading(false);
           setLoading(false);
           setNextRefreshAt(Date.now() + REFRESH_MS);
           return [];
         }
+        setAccessRestricted(false);
         return data;
       })
       .then(data => {
@@ -513,6 +538,7 @@ export default function Timeline() {
         setNextRefreshAt(Date.now() + REFRESH_MS);
       })
       .catch(() => {
+        setAccessRestricted(false);
         setPosts([]);
         setProgressiveLoading(false);
         setLoading(false);
@@ -1020,7 +1046,51 @@ export default function Timeline() {
     openTagModal
   ]);
 
-  if (loading) return <div className="timeline-loading">Carregando notícias...</div>;
+    if (loading) return <div className="timeline-loading">Carregando noticias...</div>;
+  if (accessRestricted) {
+    return (
+      <div className="timeline-container timeline-promo">
+        <div className="timeline-header">
+          <div>
+            <h2>Beta aberto</h2>
+            <div className="timeline-refresh">Veja uma amostra do Radar de Noticias</div>
+          </div>
+        </div>
+        <div className="timeline-promo-hero">
+          <div className="timeline-promo-copy">
+            <h3>Inteligencia editorial para equipes que precisam de velocidade</h3>
+            <p>
+              Esta pagina mostra apenas parte do conteudo. Faca login para acessar
+              a linha do tempo completa, salvos e filtros inteligentes.
+            </p>
+          </div>
+          <div className="timeline-promo-actions">
+            <a
+              className="timeline-promo-button"
+              href={`${API_BASE}/auth/google?redirect=/beta`}
+            >
+              Entrar com Google
+            </a>
+            <div className="timeline-promo-note">Login libera recursos completos.</div>
+          </div>
+        </div>
+        <div className="timeline-promo-grid">
+          {promoItems.map((item) => (
+            <div key={item.title} className="timeline-promo-card">
+              <div className="timeline-promo-meta">{item.feedName}</div>
+              <div className="timeline-promo-title">{item.title}</div>
+              <div className="timeline-promo-snippet">{item.contentSnippet}</div>
+              <div className="timeline-promo-tags">
+                {item.tags.map((tag) => (
+                  <span key={tag} className="timeline-promo-tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -1494,6 +1564,7 @@ export default function Timeline() {
     </>
   );
 }
+
 
 
 
