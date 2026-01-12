@@ -121,55 +121,137 @@ const TrendsPlaceholder = ({ title, subtitle }) => (
   </div>
 );
 
-const BetaTeaser = ({ onLogin }) => (
-  <div className="beta-landing">
-    <div className="beta-hero">
-      <div className="beta-brand">
-        <div className="beta-logo">RN</div>
-        <div>
-          <div className="beta-title">Radar de Notícias</div>
-          <div className="beta-subtitle">Beta aberto para testes</div>
+const BetaTeaser = ({ onLogin }) => {
+  const [liveItem, setLiveItem] = useState(null);
+  const [liveLoading, setLiveLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLive = () => {
+      setLiveLoading(true);
+      apiFetch(`${API_BASE}/public/watch?email=fernandocasali8@gmail.com`)
+        .then((res) => res.json())
+        .then((payload) => {
+          if (!isMounted) return;
+          const items = Array.isArray(payload?.items) ? payload.items : [];
+          const now = Date.now();
+          const cutoff = now - 5 * 60 * 1000;
+          const recent = items.find((item) => {
+            const stamp = new Date(item.isoDate || item.pubDate || '').getTime();
+            return Number.isFinite(stamp) && stamp >= cutoff;
+          });
+          setLiveItem(recent || null);
+          setLiveLoading(false);
+        })
+        .catch(() => {
+          if (!isMounted) return;
+          setLiveItem(null);
+          setLiveLoading(false);
+        });
+    };
+    fetchLive();
+    const timer = setInterval(fetchLive, 60 * 1000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  const getFaviconUrl = (url) => {
+    if (!url) return '';
+    try {
+      const host = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  return (
+    <div className="beta-landing">
+      <div className="beta-hero">
+        <div className="beta-brand">
+          <div className="beta-logo">RN</div>
+          <div>
+            <div className="beta-title">Radar de Notícias</div>
+            <div className="beta-subtitle">Beta aberto para testes</div>
+          </div>
+        </div>
+        <div className="beta-copy">
+          <h2>Monitoramento editorial sem ruído</h2>
+          <p>
+            Esta página mostra apenas uma amostra. Entre para ver a linha do tempo
+            completa e salvar notícias.
+          </p>
+        </div>
+        <div className="beta-actions">
+          <button type="button" className="beta-cta" onClick={onLogin}>
+            Entrar com Google
+          </button>
+          <a className="beta-cta secondary" href="/noticias">
+            Ver amostra pública
+          </a>
+          <div className="beta-note">Acesso completo liberado após login.</div>
         </div>
       </div>
-      <div className="beta-copy">
-        <h2>Monitoramento editorial sem ruído</h2>
-        <p>
-          Esta página mostra apenas uma amostra. Entre para ver a linha do tempo
-          completa e salvar notícias.
-        </p>
+      <div className="beta-grid">
+        <div className="beta-card">
+          <div className="beta-card-title">Alertas em tempo real</div>
+          <div className="beta-card-body">
+            Receba sinais rápidos sobre temas críticos e reaja antes do mercado.
+          </div>
+        </div>
+        <div className="beta-card">
+          <div className="beta-card-title">Curadoria inteligente</div>
+          <div className="beta-card-body">
+            Filtros, tags e fontes relevantes com critério editorial.
+          </div>
+        </div>
+        <div className="beta-card">
+          <div className="beta-card-title">Coleção de salvos</div>
+          <div className="beta-card-body">
+            Organize notícias por tema e compartilhe com o time.
+          </div>
+        </div>
       </div>
-      <div className="beta-actions">
-        <button type="button" className="beta-cta" onClick={onLogin}>
-          Entrar com Google
-        </button>
-        <a className="beta-cta secondary" href="/noticias">
-          Ver amostra pública
-        </a>
-        <div className="beta-note">Acesso completo liberado após login.</div>
+      <div className="beta-live">
+        <div className="beta-live-card">
+          <div className="beta-live-header">
+            <span>Últimos 5 minutos</span>
+            <span className="beta-live-pill">Ao vivo</span>
+          </div>
+          {liveLoading && <div className="beta-live-title">Carregando notícia recente...</div>}
+          {!liveLoading && !liveItem && (
+            <div className="beta-live-title">Nenhuma notícia recente nos últimos 5 minutos.</div>
+          )}
+          {!liveLoading && liveItem && (
+            <a className="beta-live-link" href={liveItem.link || '#'} target="_blank" rel="noreferrer">
+              <div className="beta-live-row">
+                {getFaviconUrl(liveItem.link) && (
+                  <img
+                    className="beta-live-favicon"
+                    src={getFaviconUrl(liveItem.link)}
+                    alt=""
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackFavicon;
+                    }}
+                  />
+                )}
+                <div>
+                  <div className="beta-live-title">{liveItem.title || 'Notícia recente'}</div>
+                  <div className="beta-live-meta">{liveItem.feedName || 'Fonte'}</div>
+                </div>
+              </div>
+              {liveItem.contentSnippet && (
+                <div className="beta-live-snippet">{liveItem.contentSnippet}</div>
+              )}
+            </a>
+          )}
+        </div>
       </div>
     </div>
-    <div className="beta-grid">
-      <div className="beta-card">
-        <div className="beta-card-title">Alertas em tempo real</div>
-        <div className="beta-card-body">
-          Receba sinais rápidos sobre temas críticos e reaja antes do mercado.
-        </div>
-      </div>
-      <div className="beta-card">
-        <div className="beta-card-title">Curadoria inteligente</div>
-        <div className="beta-card-body">
-          Filtros, tags e fontes relevantes com critério editorial.
-        </div>
-      </div>
-      <div className="beta-card">
-        <div className="beta-card-title">Coleção de salvos</div>
-        <div className="beta-card-body">
-          Organize notícias por tema e compartilhe com o time.
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 function MainApp({ initialPage, betaMode = false }) {
   const siteMatch = window.location.pathname.startsWith('/site/');
