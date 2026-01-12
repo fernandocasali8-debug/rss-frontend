@@ -565,7 +565,7 @@ function MainApp({ initialPage, betaMode = false }) {
     return <DisplayMode />;
   }
 
-  if (!authLoading && !authUser) {
+  if (!authLoading && !authUser && !isBeta) {
     return (
       <div className="auth-screen">
         <div className="auth-shell">
