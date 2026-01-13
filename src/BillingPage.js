@@ -14,9 +14,9 @@ export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [publicKey, setPublicKey] = useState('');
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState('');
-  const [preferenceId, setPreferenceId] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
   const [scriptReady, setScriptReady] = useState(false);
   const brickRef = useRef(null);
 
@@ -62,7 +62,7 @@ export default function BillingPage() {
   }, []);
 
   useEffect(() => {
-    if (!preferenceId || !publicKey || !scriptReady || !window.MercadoPago) return undefined;
+    if (!selectedPlan || !publicKey || !scriptReady || !window.MercadoPago) return undefined;
     if (brickRef.current && brickRef.current.unmount) {
       brickRef.current.unmount();
       brickRef.current = null;
@@ -70,11 +70,67 @@ export default function BillingPage() {
     const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
     const bricksBuilder = mp.bricks();
     bricksBuilder
-      .create('wallet', 'mp-wallet-brick', {
-        initialization: { preferenceId },
+      .create('payment', 'mp-payment-brick', {
+        initialization: {
+          amount: selectedPlan.price
+        },
         customization: {
-          texts: {
-            valueProp: 'smart_option'
+          paymentMethods: {
+            creditCard: 'all',
+            debitCard: 'all',
+            bankTransfer: 'all',
+            ticket: 'all'
+          },
+          visual: {
+            style: {
+              theme: 'default',
+              customVariables: {
+                formBackgroundColor: '#ffffff',
+                baseColor: '#0f172a',
+                baseColorSecondVariant: '#22c55e',
+                textPrimaryColor: '#0f172a',
+                textSecondaryColor: '#64748b',
+                inputBackgroundColor: '#f8fafc',
+                inputBorderColor: '#e2e8f0',
+                inputPlaceholderColor: '#94a3b8',
+                buttonBackgroundColor: '#0f172a',
+                buttonTextColor: '#ffffff',
+                borderRadius: '12px'
+              }
+            }
+          }
+        },
+        callbacks: {
+          onReady: () => {},
+          onSubmit: async ({ selectedPaymentMethod, formData }) => {
+            setPaymentStatus('processing');
+            setPaymentMessage('');
+            try {
+              const res = await apiFetch(API_BASE + '/billing/payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  planId: selectedPlan.id,
+                  token: formData?.token,
+                  payment_method_id: selectedPaymentMethod?.id || formData?.payment_method_id,
+                  installments: formData?.installments,
+                  payer: formData?.payer
+                })
+              });
+              const data = await res.json();
+              if (!res.ok || !data.ok) {
+                throw new Error(data.message || 'Falha ao processar pagamento.');
+              }
+              setPaymentStatus(data.status || 'approved');
+              setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
+            } catch (err) {
+              setPaymentStatus('error');
+              setPaymentMessage(err.message || 'Falha ao processar pagamento.');
+            }
+          },
+          onError: () => {
+            setPaymentStatus('error');
+            setPaymentMessage('Falha ao carregar o checkout.');
           }
         }
       })
@@ -87,34 +143,10 @@ export default function BillingPage() {
 
     return () => {
       if (brickRef.current && brickRef.current.unmount) {
-        brickRef.current.unmount();
         brickRef.current = null;
       }
     };
-  }, [preferenceId, publicKey, scriptReady]);
-
-  const handleCheckout = async (plan) => {
-    if (!plan) return;
-    setCheckoutLoading(true);
-    setError('');
-    setPreferenceId('');
-    try {
-      const res = await apiFetch(API_BASE + '/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        throw new Error(data.message || 'Falha ao iniciar o pagamento.');
-      }
-      setPreferenceId(data.preferenceId || '');
-    } catch (err) {
-      setError(err.message || 'Falha ao iniciar o pagamento.');
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
+  }, [selectedPlan, publicKey, scriptReady]);
 
   const handleFaviconError = (event) => {
     if (!event?.currentTarget) return;
@@ -162,17 +194,13 @@ export default function BillingPage() {
             <h3>{selectedPlan ? `Assinar ${selectedPlan.name}` : 'Selecione um plano'}</h3>
             <p>Checkout embutido via Mercado Pago (modo teste).</p>
           </div>
-          <button
-            type="button"
-            className="billing-checkout-button"
-            onClick={() => handleCheckout(selectedPlan)}
-            disabled={!selectedPlan || checkoutLoading}
-          >
-            {checkoutLoading ? 'Gerando checkout...' : 'Gerar checkout'}
-          </button>
+          <div className="billing-checkout-pill">Personalizavel</div>
         </div>
 
         {error && <div className="billing-error">{error}</div>}
+        {paymentMessage && (
+          <div className={`billing-status ${paymentStatus}`}>{paymentMessage}</div>
+        )}
 
         <div className="billing-live">
           <div className="billing-live-card">
@@ -190,7 +218,7 @@ export default function BillingPage() {
               </div>
             </div>
           </div>
-          <div className="billing-brick" id="mp-wallet-brick" />
+          <div className="billing-brick" id="mp-payment-brick" />
         </div>
       </div>
     </div>
