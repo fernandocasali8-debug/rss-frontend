@@ -124,10 +124,11 @@ export default function BillingPage() {
                       payer: formData?.payer
                     })
                   });
-                  const data = await res.json();
-                  if (!res.ok || !data.ok) {
-                    throw new Error(data.message || 'Falha ao processar pagamento.');
-                  }
+              const data = await res.json();
+              if (!res.ok || !data.ok) {
+                const detailMessage = data?.detail?.message || data?.detail?.error || '';
+                throw new Error(detailMessage || data.message || 'Falha ao processar pagamento.');
+              }
                   setPaymentStatus(data.status || 'approved');
                   setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
                   resolve();
