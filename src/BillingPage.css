@@ -218,3 +218,33 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+.billing-qr {
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  background: #f8fafc;
+  display: grid;
+  gap: 12px;
+}
+
+.billing-qr-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #64748b;
+}
+
+.billing-qr-image {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.billing-qr-code {
+  font-size: 11px;
+  color: #475569;
+  word-break: break-all;
+  line-height: 1.4;
+}

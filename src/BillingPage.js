@@ -17,6 +17,7 @@ export default function BillingPage() {
   const [error, setError] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentDetail, setPaymentDetail] = useState(null);
   const [scriptReady, setScriptReady] = useState(false);
   const brickRef = useRef(null);
   const brickContainerRef = useRef(null);
@@ -65,6 +66,7 @@ export default function BillingPage() {
   useEffect(() => {
     if (!selectedPlan || !publicKey || !scriptReady || !window.MercadoPago) return undefined;
     let isMounted = true;
+
     const mountBrick = async () => {
       if (brickRef.current && brickRef.current.unmount) {
         await brickRef.current.unmount();
@@ -75,6 +77,7 @@ export default function BillingPage() {
       }
       const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
       const bricksBuilder = mp.bricks();
+
       try {
         const controller = await bricksBuilder.create('payment', 'mp-payment-brick', {
           initialization: {
@@ -112,6 +115,7 @@ export default function BillingPage() {
               new Promise(async (resolve, reject) => {
                 setPaymentStatus('processing');
                 setPaymentMessage('');
+                setPaymentDetail(null);
                 try {
                   const res = await apiFetch(API_BASE + '/billing/payment', {
                     method: 'POST',
@@ -124,13 +128,18 @@ export default function BillingPage() {
                       payer: formData?.payer
                     })
                   });
-              const data = await res.json();
-              if (!res.ok || !data.ok) {
-                const detailMessage = data?.detail?.message || data?.detail?.error || '';
-                throw new Error(detailMessage || data.message || 'Falha ao processar pagamento.');
-              }
+                  const data = await res.json();
+                  if (!res.ok || !data.ok) {
+                    const detailMessage = data?.detail?.message || data?.detail?.error || '';
+                    throw new Error(detailMessage || data.message || 'Falha ao processar pagamento.');
+                  }
                   setPaymentStatus(data.status || 'approved');
-                  setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
+                  setPaymentDetail(data.detail || null);
+                  if (data.status === 'pending') {
+                    setPaymentMessage('Pagamento pendente. Use o QR Code para concluir.');
+                  } else {
+                    setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
+                  }
                   resolve();
                 } catch (err) {
                   setPaymentStatus('error');
@@ -145,6 +154,7 @@ export default function BillingPage() {
             }
           }
         });
+
         if (isMounted) {
           brickRef.current = controller;
         }
@@ -154,6 +164,7 @@ export default function BillingPage() {
         }
       }
     };
+
     mountBrick();
 
     return () => {
@@ -217,6 +228,21 @@ export default function BillingPage() {
         {error && <div className="billing-error">{error}</div>}
         {paymentMessage && (
           <div className={`billing-status ${paymentStatus}`}>{paymentMessage}</div>
+        )}
+        {paymentDetail?.point_of_interaction?.transaction_data?.qr_code_base64 && (
+          <div className="billing-qr">
+            <div className="billing-qr-title">QR Code Pix</div>
+            <img
+              className="billing-qr-image"
+              src={`data:image/png;base64,${paymentDetail.point_of_interaction.transaction_data.qr_code_base64}`}
+              alt="QR Code Pix"
+            />
+            {paymentDetail.point_of_interaction.transaction_data.qr_code && (
+              <div className="billing-qr-code">
+                {paymentDetail.point_of_interaction.transaction_data.qr_code}
+              </div>
+            )}
+          </div>
         )}
 
         <div className="billing-live">
