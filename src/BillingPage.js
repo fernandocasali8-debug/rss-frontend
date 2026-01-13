@@ -19,6 +19,7 @@ export default function BillingPage() {
   const [paymentMessage, setPaymentMessage] = useState('');
   const [scriptReady, setScriptReady] = useState(false);
   const brickRef = useRef(null);
+  const brickContainerRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -63,86 +64,101 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!selectedPlan || !publicKey || !scriptReady || !window.MercadoPago) return undefined;
-    if (brickRef.current && brickRef.current.unmount) {
-      brickRef.current.unmount();
-      brickRef.current = null;
-    }
-    const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
-    const bricksBuilder = mp.bricks();
-    bricksBuilder
-      .create('payment', 'mp-payment-brick', {
-        initialization: {
-          amount: selectedPlan.price
-        },
-        customization: {
-          paymentMethods: {
-            creditCard: 'all',
-            debitCard: 'all',
-            bankTransfer: 'all',
-            ticket: 'all'
+    let isMounted = true;
+    const mountBrick = async () => {
+      if (brickRef.current && brickRef.current.unmount) {
+        await brickRef.current.unmount();
+        brickRef.current = null;
+      }
+      if (brickContainerRef.current) {
+        brickContainerRef.current.innerHTML = '';
+      }
+      const mp = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
+      const bricksBuilder = mp.bricks();
+      try {
+        const controller = await bricksBuilder.create('payment', 'mp-payment-brick', {
+          initialization: {
+            amount: selectedPlan.price
           },
-          visual: {
-            style: {
-              theme: 'default',
-              customVariables: {
-                formBackgroundColor: '#ffffff',
-                baseColor: '#0f172a',
-                baseColorSecondVariant: '#22c55e',
-                textPrimaryColor: '#0f172a',
-                textSecondaryColor: '#64748b',
-                inputBackgroundColor: '#f8fafc',
-                inputBorderColor: '#e2e8f0',
-                inputPlaceholderColor: '#94a3b8',
-                buttonBackgroundColor: '#0f172a',
-                buttonTextColor: '#ffffff',
-                borderRadius: '12px'
+          customization: {
+            paymentMethods: {
+              creditCard: 'all',
+              debitCard: 'all',
+              bankTransfer: 'all',
+              ticket: 'all'
+            },
+            visual: {
+              style: {
+                theme: 'default',
+                customVariables: {
+                  formBackgroundColor: '#ffffff',
+                  baseColor: '#0f172a',
+                  baseColorSecondVariant: '#22c55e',
+                  textPrimaryColor: '#0f172a',
+                  textSecondaryColor: '#64748b',
+                  inputBackgroundColor: '#f8fafc',
+                  inputBorderColor: '#e2e8f0',
+                  inputPlaceholderColor: '#94a3b8',
+                  buttonBackgroundColor: '#0f172a',
+                  buttonTextColor: '#ffffff',
+                  borderRadius: '12px'
+                }
               }
             }
-          }
-        },
-        callbacks: {
-          onReady: () => {},
-          onSubmit: async ({ selectedPaymentMethod, formData }) => {
-            setPaymentStatus('processing');
-            setPaymentMessage('');
-            try {
-              const res = await apiFetch(API_BASE + '/billing/payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  planId: selectedPlan.id,
-                  token: formData?.token,
-                  payment_method_id: selectedPaymentMethod?.id || formData?.payment_method_id,
-                  installments: formData?.installments,
-                  payer: formData?.payer
-                })
-              });
-              const data = await res.json();
-              if (!res.ok || !data.ok) {
-                throw new Error(data.message || 'Falha ao processar pagamento.');
-              }
-              setPaymentStatus(data.status || 'approved');
-              setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
-            } catch (err) {
+          },
+          callbacks: {
+            onReady: () => {},
+            onSubmit: ({ selectedPaymentMethod, formData }) => (
+              new Promise(async (resolve, reject) => {
+                setPaymentStatus('processing');
+                setPaymentMessage('');
+                try {
+                  const res = await apiFetch(API_BASE + '/billing/payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      planId: selectedPlan.id,
+                      token: formData?.token,
+                      payment_method_id: selectedPaymentMethod?.id || formData?.payment_method_id,
+                      installments: formData?.installments,
+                      payer: formData?.payer
+                    })
+                  });
+                  const data = await res.json();
+                  if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Falha ao processar pagamento.');
+                  }
+                  setPaymentStatus(data.status || 'approved');
+                  setPaymentMessage('Pagamento processado. Acompanhe o status no seu painel.');
+                  resolve();
+                } catch (err) {
+                  setPaymentStatus('error');
+                  setPaymentMessage(err.message || 'Falha ao processar pagamento.');
+                  reject();
+                }
+              })
+            ),
+            onError: () => {
               setPaymentStatus('error');
-              setPaymentMessage(err.message || 'Falha ao processar pagamento.');
+              setPaymentMessage('Falha ao carregar o checkout.');
             }
-          },
-          onError: () => {
-            setPaymentStatus('error');
-            setPaymentMessage('Falha ao carregar o checkout.');
           }
+        });
+        if (isMounted) {
+          brickRef.current = controller;
         }
-      })
-      .then((controller) => {
-        brickRef.current = controller;
-      })
-      .catch(() => {
-        setError('Falha ao inicializar o checkout.');
-      });
+      } catch (err) {
+        if (isMounted) {
+          setError('Falha ao inicializar o checkout.');
+        }
+      }
+    };
+    mountBrick();
 
     return () => {
+      isMounted = false;
       if (brickRef.current && brickRef.current.unmount) {
+        brickRef.current.unmount();
         brickRef.current = null;
       }
     };
@@ -218,7 +234,7 @@ export default function BillingPage() {
               </div>
             </div>
           </div>
-          <div className="billing-brick" id="mp-payment-brick" />
+          <div className="billing-brick" id="mp-payment-brick" ref={brickContainerRef} />
         </div>
       </div>
     </div>
