@@ -15,6 +15,7 @@ import FeedRepositoryPage from './FeedRepositoryPage';
 import RssGeneratorPage from './RssGeneratorPage';
 import WatchPage from './WatchPage';
 import InfluencersPage from './InfluencersPage';
+import BillingPage from './BillingPage';
 import AdminApp from './AdminApp';
 import LandingPage from './LandingPage';
 import TeamPage from './TeamPage';
@@ -25,6 +26,7 @@ import {
   Bell,
   Bookmark,
   BookOpen,
+  CreditCard,
   Eye,
   Folder,
   LayoutDashboard,
@@ -91,17 +93,18 @@ const ROUTE_SECTIONS = [
       { key: 'influencers', label: 'Influenciadores', icon: Users },
       { key: 'team', label: 'Times', icon: Users },
       { key: 'rss-generator', label: 'Gerador RSS', icon: Sparkles },
-      { key: 'repo', label: 'Repositório', icon: Folder },
+      { key: 'repo', label: 'Repositorio', icon: Folder },
+      { key: 'billing', label: 'Planos e pagamentos', icon: CreditCard },
       { key: 'config', label: 'Configuração', icon: Settings }
     ]
   }
 ];
 
 const PLAN_ACCESS = {
-  starter: ['dashboard', 'home', 'saved'],
-  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers'],
-  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config'],
-  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config']
+  starter: ['dashboard', 'home', 'saved', 'billing'],
+  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'billing'],
+  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'billing', 'config'],
+  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'billing', 'config']
 };
 
 const TrendsPlaceholder = ({ title, subtitle }) => (
@@ -287,7 +290,7 @@ function MainApp({ initialPage, betaMode = false }) {
   const [contextMenuConfig, setContextMenuConfig] = useState(DEFAULT_CONTEXT_MENU);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, card: null });
   const userPlan = authUser?.plan || 'starter';
-  const baseAllowedKeys = isBeta ? ['home', 'saved'] : (PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter);
+  const baseAllowedKeys = isBeta ? ['home', 'saved', 'billing'] : (PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter);
   const allowedKeys = teamAdminEnabled
     ? baseAllowedKeys
     : baseAllowedKeys.filter((key) => key !== 'team');
@@ -1043,6 +1046,7 @@ function MainApp({ initialPage, betaMode = false }) {
           {page === 'team' && <TeamPage />}
           {page === 'rss-generator' && <RssGeneratorPage />}
           {page === 'watch' && <WatchPage />}
+          {page === 'billing' && <BillingPage />}
           {page === 'config' && (
             <ConfigPage
               onFeedAdded={handleFeedAdded}
@@ -1239,6 +1243,9 @@ function App() {
 }
 
 export default App;
+
+
+
 
 
 
