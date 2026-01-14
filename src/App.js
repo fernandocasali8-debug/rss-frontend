@@ -15,7 +15,6 @@ import FeedRepositoryPage from './FeedRepositoryPage';
 import RssGeneratorPage from './RssGeneratorPage';
 import WatchPage from './WatchPage';
 import InfluencersPage from './InfluencersPage';
-import BillingPage from './BillingPage';
 import AdminApp from './AdminApp';
 import LandingPage from './LandingPage';
 import TeamPage from './TeamPage';
@@ -26,7 +25,6 @@ import {
   Bell,
   Bookmark,
   BookOpen,
-  CreditCard,
   Eye,
   Folder,
   LayoutDashboard,
@@ -77,15 +75,15 @@ const ROUTE_SECTIONS = [
     ]
   },
   {
-    section: 'GESTÃO',
+    section: 'GEST\u00C3O',
     items: [
-      { key: 'summary', label: 'Resumo diário', icon: BookOpen },
+      { key: 'summary', label: 'Resumo di\u00E1rio', icon: BookOpen },
       {
         key: 'trends',
-        label: 'Tendências',
+        label: 'Tend\u00EAncias',
         icon: TrendingUp,
         subItems: [
-          { key: 'trends-news', label: 'Noticias Google', routeKey: 'trends' },
+          { key: 'trends-news', label: 'Not\u00EDcias Google', routeKey: 'trends' },
           { key: 'trends-terms', label: 'Termos Google' },
           { key: 'trends-events', label: 'Expectativas de eventos' }
         ]
@@ -93,18 +91,17 @@ const ROUTE_SECTIONS = [
       { key: 'influencers', label: 'Influenciadores', icon: Users },
       { key: 'team', label: 'Times', icon: Users },
       { key: 'rss-generator', label: 'Gerador RSS', icon: Sparkles },
-      { key: 'repo', label: 'Repositorio', icon: Folder },
-      { key: 'billing', label: 'Planos e pagamentos', icon: CreditCard },
-      { key: 'config', label: 'Configuração', icon: Settings }
+      { key: 'repo', label: 'Reposit\u00F3rio', icon: Folder },
+      { key: 'config', label: 'Configura\u00E7\u00E3o', icon: Settings }
     ]
   }
 ];
 
 const PLAN_ACCESS = {
-  starter: ['dashboard', 'home', 'saved', 'billing'],
-  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'billing'],
-  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'billing', 'config'],
-  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'billing', 'config']
+  starter: ['dashboard', 'home', 'saved'],
+  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers'],
+  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config'],
+  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config']
 };
 
 const TrendsPlaceholder = ({ title, subtitle }) => (
@@ -119,7 +116,7 @@ const TrendsPlaceholder = ({ title, subtitle }) => (
       <span>Em breve</span>
     </div>
     <div className="timeline-trends is-grid">
-      <div className="timeline-trends-status">Estamos preparando este modulo.</div>
+      <div className="timeline-trends-status">Estamos preparando este m\u00F3dulo.</div>
     </div>
   </div>
 );
@@ -153,7 +150,7 @@ const BetaTeaser = ({ onLogin }) => {
         });
     };
     fetchLive();
-    const timer = setInterval(fetchLive, 60 * 1000);
+    const timer = setInterval(fetchLive, 5 * 60 * 1000);
     return () => {
       isMounted = false;
       clearInterval(timer);
@@ -176,15 +173,15 @@ const BetaTeaser = ({ onLogin }) => {
         <div className="beta-brand">
           <div className="beta-logo">RN</div>
           <div>
-            <div className="beta-title">Radar de Notícias</div>
-            <div className="beta-subtitle">Beta aberto para testes</div>
+            <div className="beta-title">Radar de Not\u00EDcias</div>
+            <div className="beta-subtitle">Beta operacional</div>
           </div>
         </div>
         <div className="beta-copy">
-          <h2>Monitoramento editorial sem ruído</h2>
+          <h2>Monitoramento editorial sem ru\u00EDdo</h2>
           <p>
-            Esta página mostra apenas uma amostra. Entre para ver a linha do tempo
-            completa e salvar notícias.
+            Esta p\u00E1gina mostra uma amostra ao vivo. Entre para ver a linha do tempo
+            completa e salvar not\u00EDcias.
           </p>
         </div>
         <div className="beta-actions">
@@ -192,40 +189,40 @@ const BetaTeaser = ({ onLogin }) => {
             Entrar com Google
           </button>
           <a className="beta-cta secondary" href="/noticias">
-            Ver amostra pública
+            Ver amostra p\u00FAblica
           </a>
-          <div className="beta-note">Acesso completo liberado após login.</div>
+          <div className="beta-note">Login libera todos os recursos.</div>
         </div>
       </div>
       <div className="beta-grid">
         <div className="beta-card">
           <div className="beta-card-title">Alertas em tempo real</div>
           <div className="beta-card-body">
-            Receba sinais rápidos sobre temas críticos e reaja antes do mercado.
+            Receba sinais r\u00E1pidos sobre temas cr\u00EDticos e reaja antes do mercado.
           </div>
         </div>
         <div className="beta-card">
           <div className="beta-card-title">Curadoria inteligente</div>
           <div className="beta-card-body">
-            Filtros, tags e fontes relevantes com critério editorial.
+            Filtros, tags e fontes relevantes com crit\u00E9rio editorial.
           </div>
         </div>
         <div className="beta-card">
-          <div className="beta-card-title">Coleção de salvos</div>
+          <div className="beta-card-title">Cole\u00E7\u00E3o de salvos</div>
           <div className="beta-card-body">
-            Organize notícias por tema e compartilhe com o time.
+            Organize not\u00EDcias por tema e compartilhe com o time.
           </div>
         </div>
       </div>
       <div className="beta-live">
         <div className="beta-live-card">
           <div className="beta-live-header">
-            <span>Últimos 5 minutos</span>
+            <span>\u00DAltimos 5 minutos</span>
             <span className="beta-live-pill">Ao vivo</span>
           </div>
-          {liveLoading && <div className="beta-live-title">Carregando notícia recente...</div>}
+          {liveLoading && <div className="beta-live-title">Carregando not\u00EDcia recente...</div>}
           {!liveLoading && !liveItem && (
-            <div className="beta-live-title">Nenhuma notícia recente nos últimos 5 minutos.</div>
+            <div className="beta-live-title">Nenhuma not\u00EDcia recente nos \u00DAltimos 5 minutos.</div>
           )}
           {!liveLoading && liveItem && (
             <a className="beta-live-link" href={liveItem.link || '#'} target="_blank" rel="noreferrer">
@@ -241,7 +238,7 @@ const BetaTeaser = ({ onLogin }) => {
                   />
                 )}
                 <div>
-                  <div className="beta-live-title">{liveItem.title || 'Notícia recente'}</div>
+                  <div className="beta-live-title">{liveItem.title || 'Not\u00EDcia recente'}</div>
                   <div className="beta-live-meta">{liveItem.feedName || 'Fonte'}</div>
                 </div>
               </div>
@@ -290,7 +287,7 @@ function MainApp({ initialPage, betaMode = false }) {
   const [contextMenuConfig, setContextMenuConfig] = useState(DEFAULT_CONTEXT_MENU);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, card: null });
   const userPlan = authUser?.plan || 'starter';
-  const baseAllowedKeys = isBeta ? ['home', 'saved', 'billing'] : (PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter);
+  const baseAllowedKeys = isBeta ? ['home', 'saved'] : (PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter);
   const allowedKeys = teamAdminEnabled
     ? baseAllowedKeys
     : baseAllowedKeys.filter((key) => key !== 'team');
@@ -372,38 +369,6 @@ function MainApp({ initialPage, betaMode = false }) {
         setAuthLoading(false);
       });
   }, []);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!authUser || !['business', 'enterprise'].includes(authUser.plan)) {
-      setTeamAdminEnabled(false);
-      setTeamMemberTag('');
-      return;
-    }
-    const email = String(authUser.email || '').toLowerCase();
-    apiFetch(`${API_BASE}/teams`)
-      .then((res) => res.json())
-      .then((data) => {
-        const teams = Array.isArray(data) ? data : [];
-        const isAdmin = teams.some((team) => (
-          team.ownerEmail === email
-          || (team.members || []).some((member) => (
-            member.email === email && member.role === 'admin'
-          ))
-        ));
-        const memberTeam = teams.find((team) => (
-          (team.members || []).some((member) => (
-            member.email === email && member.role !== 'admin'
-          ))
-        ));
-        setTeamAdminEnabled(isAdmin);
-        setTeamMemberTag(memberTeam ? memberTeam.name : '');
-      })
-      .catch(() => {
-        setTeamAdminEnabled(false);
-        setTeamMemberTag('');
-      });
-  }, [authLoading, authUser]);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem('rss-ticker-config');
@@ -1046,7 +1011,6 @@ function MainApp({ initialPage, betaMode = false }) {
           {page === 'team' && <TeamPage />}
           {page === 'rss-generator' && <RssGeneratorPage />}
           {page === 'watch' && <WatchPage />}
-          {page === 'billing' && <BillingPage />}
           {page === 'config' && (
             <ConfigPage
               onFeedAdded={handleFeedAdded}
@@ -1243,6 +1207,8 @@ function App() {
 }
 
 export default App;
+
+
 
 
 

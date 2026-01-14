@@ -8,7 +8,7 @@ const formatPrice = (value, currency) => new Intl.NumberFormat('pt-BR', {
   currency: currency || 'BRL'
 }).format(value || 0);
 
-export default function BillingPage() {
+export default function BillingPage({ initialPlanId = '' }) {
   const [plans, setPlans] = useState([]);
   const [currency, setCurrency] = useState('BRL');
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -34,7 +34,10 @@ export default function BillingPage() {
         setCurrency(planPayload?.currency || 'BRL');
         const list = Array.isArray(planPayload?.plans) ? planPayload.plans : [];
         setPlans(list);
-        setSelectedPlan(list.find((item) => item.highlight) || list[0] || null);
+        const preselected = initialPlanId
+          ? list.find((item) => item.id === initialPlanId)
+          : null;
+        setSelectedPlan(preselected || list.find((item) => item.highlight) || list[0] || null);
         setLoading(false);
       })
       .catch(() => {
