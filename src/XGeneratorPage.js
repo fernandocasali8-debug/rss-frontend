@@ -45,6 +45,20 @@ export default function XGeneratorPage() {
         }
         throw new Error(errorMessage);
       }
+      if (body.trim().startsWith('{')) {
+        let errorMessage = '';
+        try {
+          const parsed = JSON.parse(body || '{}');
+          if (parsed && parsed.error) {
+            errorMessage = parsed.error;
+          }
+        } catch (err) {
+          // ignore parse errors
+        }
+        if (errorMessage) {
+          throw new Error(errorMessage);
+        }
+      }
       setFeedUrl(requestUrl);
       setStatus('success');
       setMessage('RSS gerado com sucesso.');
