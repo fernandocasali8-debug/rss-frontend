@@ -1,0 +1,147 @@
+.xgen-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 10%, rgba(28, 85, 255, 0.15), transparent 55%),
+    radial-gradient(circle at 90% 20%, rgba(0, 200, 160, 0.12), transparent 45%),
+    #0b1220;
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.xgen-card {
+  width: min(920px, 100%);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(16px);
+}
+
+.xgen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.xgen-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.xgen-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.xgen-subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  max-width: 560px;
+}
+
+.xgen-form {
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.xgen-input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  padding: 14px 16px;
+  font-size: 15px;
+}
+
+.xgen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.xgen-button {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.xgen-button.primary {
+  background: #22c55e;
+  color: #0b1220;
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
+}
+
+.xgen-button.secondary {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+.xgen-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.xgen-status {
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+
+.xgen-status.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.xgen-status.error {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+}
+
+.xgen-output {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.6);
+  font-size: 13px;
+  color: #cbd5f5;
+  word-break: break-all;
+}
+
+.xgen-footer {
+  margin-top: 18px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+@media (max-width: 600px) {
+  .xgen-card {
+    padding: 24px;
+  }
+
+  .xgen-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

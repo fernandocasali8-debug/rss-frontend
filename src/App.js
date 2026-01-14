@@ -20,6 +20,7 @@ import LandingPage from './LandingPage';
 import TeamPage from './TeamPage';
 import PublicSite from './PublicSite';
 import PublicWatchSite from './PublicWatchSite';
+import XGeneratorPage from './XGeneratorPage';
 import Sidebar from './Sidebar';
 import {
   Bell,
@@ -1171,6 +1172,9 @@ function App() {
   const pathname = window.location.pathname;
   if (pathname.startsWith('/admin')) {
     return <AdminApp />;
+  }
+  if (pathname.startsWith('/labs/x-rss')) {
+    return <XGeneratorPage />;
   }
   if (pathname.startsWith('/team')) {
     return <MainApp initialPage="team" />;
