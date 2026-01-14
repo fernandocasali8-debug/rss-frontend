@@ -561,6 +561,8 @@ function AdminUsersPage({
               <tr>
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Login</th>
+                <th className="px-4 py-3">Ultimo acesso</th>
                 <th className="px-4 py-3">Plano</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Ativo</th>
@@ -570,6 +572,12 @@ function AdminUsersPage({
             <tbody>
               {users.map((user) => {
                 const draft = edits[user.id] || {};
+                const loginLabel = user.authProvider === 'google'
+                  ? 'Google'
+                  : (user.authProvider || 'Manual');
+                const lastLoginLabel = user.lastLoginAt
+                  ? new Date(user.lastLoginAt).toLocaleString('pt-BR')
+                  : '-';
                 return (
                   <tr key={user.id} className="border-t border-slate-200">
                     <td className="px-4 py-3">
@@ -587,6 +595,12 @@ function AdminUsersPage({
                         value={draft.email ?? user.email ?? ''}
                         onChange={(event) => onEditChange(user.id, 'email', event.target.value)}
                       />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {loginLabel}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {lastLoginLabel}
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -643,14 +657,14 @@ function AdminUsersPage({
               })}
               {!loading && users.length === 0 && (
                 <tr className="border-t border-slate-200">
-                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
                     Nenhum usuario cadastrado.
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr className="border-t border-slate-200">
-                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
                     Carregando usuarios...
                   </td>
                 </tr>
