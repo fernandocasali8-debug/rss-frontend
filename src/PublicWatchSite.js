@@ -1,8 +1,11 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
+import fallbackFavicon from './fallback-favicon.svg';
 import './PublicWatchSite.css';
 
 const DEFAULT_EMAIL = 'fernandocasali8@gmail.com';
+const THEME_KEY = 'public-watch-theme';
+const CACHE_KEY = 'public-watch-cache-v1';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -20,29 +23,76 @@ const formatTime = (value) => {
 
 const getItemDate = (item) => item.isoDate || item.pubDate || '';
 
-const uniqueTopics = (topics) => {
-  const list = Array.isArray(topics) ? topics : [];
-  return list.filter(Boolean);
+const readCache = (email) => {
+  if (!email) return null;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const entry = parsed[email];
+    if (!entry || !entry.data) return null;
+    if (!Array.isArray(entry.data.items)) return null;
+    return entry;
+  } catch (e) {
+    return null;
+  }
+};
+
+const writeCache = (email, data) => {
+  if (!email) return;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    parsed[email] = {
+      data,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(parsed));
+  } catch (e) {
+    // ignore cache errors
+  }
 };
 
 function PublicWatchSite() {
-  const [data, setData] = useState({ items: [], topics: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const refreshTimerRef = useRef(null);
-
   const queryEmail = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('email') || DEFAULT_EMAIL;
   }, []);
+  const cachedEntry = useMemo(() => readCache(queryEmail), [queryEmail]);
+  const [data, setData] = useState(() => cachedEntry?.data || { items: [], topics: [] });
+  const [loading, setLoading] = useState(() => !cachedEntry);
+  const [error, setError] = useState('');
+  const [hasLoaded, setHasLoaded] = useState(() => Boolean(cachedEntry));
+  const [lastUpdated, setLastUpdated] = useState(() => (
+    cachedEntry?.updatedAt ? new Date(cachedEntry.updatedAt) : null
+  ));
+  const [theme, setTheme] = useState('light');
+  const refreshTimerRef = useRef(null);
+  const hasCacheRef = useRef(Boolean(cachedEntry));
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      return;
+    }
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = prefersDark ? 'dark' : 'light';
+    setTheme(initialTheme);
+    document.documentElement.setAttribute('data-theme', initialTheme);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchWatch = ({ initial = false } = {}) => {
-      if (initial) {
+      if (initial && !hasCacheRef.current) {
         setLoading(true);
       }
       if (initial) {
@@ -53,8 +103,8 @@ function PublicWatchSite() {
         .then(payload => {
           if (!isMounted) return;
           if (!payload || payload.ok === false) {
-            if (initial) {
-              setError('Não foi possível carregar as notícias.');
+            if (initial && !hasCacheRef.current) {
+              setError('Nao foi possivel carregar as noticias.');
               setLoading(false);
             }
             return;
@@ -72,12 +122,14 @@ function PublicWatchSite() {
           });
           setHasLoaded(true);
           setLastUpdated(new Date());
+          hasCacheRef.current = true;
+          writeCache(queryEmail, nextData);
           if (initial) setLoading(false);
         })
         .catch(() => {
           if (!isMounted) return;
-          if (initial) {
-            setError('Não foi possível carregar as notícias.');
+          if (initial && !hasCacheRef.current) {
+            setError('Nao foi possivel carregar as noticias.');
             setLoading(false);
           }
         });
@@ -99,234 +151,104 @@ function PublicWatchSite() {
   }, [queryEmail]);
 
   const items = data.items || [];
-  const heroItem = items[0];
-  const secondaryItems = items.slice(1, 6);
-  const listItems = items.slice(6, 12);
-  const latestItems = items.slice(12, 18);
 
-  const now = new Date();
-  const todayLabel = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-  const topics = uniqueTopics(data.topics);
+  const getFaviconUrl = (url) => {
+    if (!url) return '';
+    try {
+      const host = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const handleFaviconError = (event) => {
+    if (!event?.currentTarget || event.currentTarget.dataset.fallbackApplied) return;
+    event.currentTarget.dataset.fallbackApplied = '1';
+    event.currentTarget.src = fallbackFavicon;
+  };
+
+  const handleShare = async (item) => {
+    const url = item?.link || '';
+    if (!url) return;
+    const title = item?.title || 'Noticia';
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text: title, url });
+        return;
+      } catch (e) {
+        // fall back to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (e) {
+      // ignore
+    }
+  };
 
   return (
     <div className="public-news">
-      <div className="public-news-topbar">
-        <span>EDIÇÃO DIÁRIA</span>
-        <span>
-          {todayLabel}
-          {lastUpdated && ` • Atualizado às ${lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
-        </span>
-      </div>
-      <header className="public-news-header">
-        <div className="public-news-brand">
-          <div className="public-news-logo">RN</div>
-          <div>
-            <div className="public-news-title">Radar de Notícias</div>
-            <div className="public-news-subtitle">Seu radar ativo de notícias.</div>
-          </div>
-        </div>
-        <nav className="public-news-nav">
-          <a href="/noticias"><span className="material-icons-outlined">home</span>Home</a>
-          <a href="/app"><span className="material-icons-outlined">dashboard</span>Entrar</a>
-          <a href="/admin"><span className="material-icons-outlined">admin_panel_settings</span>Admin</a>
-        </nav>
-      </header>
-      <main className="public-news-main">
-        {loading && (
-          <div className="public-news-layout public-news-skeleton">
-            <section className="public-news-feature-grid">
-              <div className="public-news-feature">
-                <div className="skeleton-pill" />
-                <div className="skeleton-title" />
+      <main className="public-news-main public-news-main--full">
+        {loading && !hasLoaded && (
+          <div className="public-news-grid">
+            {Array.from({ length: 12 }).map((_, idx) => (
+              <div key={`sk-${idx}`} className="news-card news-card--skeleton">
+                <div className="skeleton-line wide" />
                 <div className="skeleton-line" />
                 <div className="skeleton-line short" />
-                <div className="public-news-chips">
-                  <div className="skeleton-chip" />
-                  <div className="skeleton-chip" />
-                  <div className="skeleton-chip" />
-                </div>
+                <div className="skeleton-pill" />
               </div>
-              <aside className="public-news-rail">
-                <div className="public-news-rail-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-stat" />
-                  <div className="skeleton-stat" />
-                  <div className="skeleton-stat" />
-                </div>
-                <div className="public-news-rail-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-topic" />
-                  <div className="skeleton-topic" />
-                  <div className="skeleton-topic" />
-                </div>
-              </aside>
-            </section>
-            <section className="public-news-feed-grid">
-              <div className="public-news-feed">
-                <div className="public-news-feed-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-title" />
-                  <div className="skeleton-line" />
-                </div>
-                <div className="public-news-feed-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-title" />
-                  <div className="skeleton-line" />
-                </div>
-                <div className="public-news-feed-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-title" />
-                  <div className="skeleton-line" />
-                </div>
-              </div>
-              <div className="public-news-latest">
-                <div className="public-news-latest-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-line" />
-                  <div className="skeleton-line short" />
-                </div>
-                <div className="public-news-latest-card">
-                  <div className="skeleton-label" />
-                  <div className="skeleton-line" />
-                  <div className="skeleton-line short" />
-                </div>
-              </div>
-            </section>
+            ))}
           </div>
         )}
         {!loading && error && !hasLoaded && (
-          <div className="public-news-rail-card">{error}</div>
-        )}
-        {!loading && !error && (
-          <div className="public-news-layout">
-            <section className="public-news-feature-grid">
-              <article className="public-news-feature">
-                <div className="public-news-badge">
-                  <span className="material-icons-outlined">insights</span>Destaque
-                </div>
-                {heroItem ? (
-                  <>
-                    <h1>{heroItem.title || 'Sem título'}</h1>
-                    <p>{heroItem.contentSnippet || 'Sem resumo disponível.'}</p>
-                    <div className="public-news-meta-row">
-                      <span className="material-icons-outlined">source</span>
-                      <span>{heroItem.feedName || 'Fonte'}</span>
-                      <span className="material-icons-outlined">calendar_today</span>
-                      <span>{formatDate(getItemDate(heroItem))}</span>
-                      <span className="material-icons-outlined">schedule</span>
-                      <span>{formatTime(getItemDate(heroItem))}</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h1>Nenhuma notícia disponível</h1>
-                    <p>Configure acompanhamentos para ver os destaques.</p>
-                  </>
-                )}
-                <div className="public-news-chips">
-                  <div className="public-news-chip"><span className="material-icons-outlined">bolt</span>Atualização contínua</div>
-                  <div className="public-news-chip"><span className="material-icons-outlined">shield</span>Curadoria automatizada</div>
-                  <div className="public-news-chip"><span className="material-icons-outlined">analytics</span>Monitoramento confiável</div>
-                </div>
-              </article>
-              <aside className="public-news-rail">
-                <div className="public-news-rail-card">
-                  <h4>Painel do dia</h4>
-                  <div className="public-news-stat-grid">
-                    <div className="public-news-stat">
-                      <span className="material-icons-outlined">rss_feed</span>
-                      <div>
-                        <strong>{items.length}</strong>
-                        <div>Notícias no radar</div>
-                      </div>
-                    </div>
-                    <div className="public-news-stat">
-                      <span className="material-icons-outlined">topic</span>
-                      <div>
-                        <strong>{topics.length}</strong>
-                        <div>Assuntos ativos</div>
-                      </div>
-                    </div>
-                    <div className="public-news-stat">
-                      <span className="material-icons-outlined">public</span>
-                      <div>
-                        <strong>Tempo real</strong>
-                        <div>Acompanhe atualizações</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="public-news-rail-card">
-                  <h4>Cadernos</h4>
-                  <div className="public-news-topic-list">
-                    {topics.length === 0 && (
-                      <div className="public-news-topic">
-                        <span className="material-icons-outlined">info</span>
-                        Sem categorias ainda
-                      </div>
-                    )}
-                    {topics.map(topic => (
-                      <div key={topic.id} className="public-news-topic">
-                        <span className="material-icons-outlined">label</span>
-                        {topic.name}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </aside>
-            </section>
-            <section className="public-news-feed-grid">
-              <div className="public-news-feed">
-                {secondaryItems.map((item, index) => (
-                  <article key={`${item.link || item.title}-feed-${index}`} className="public-news-feed-card">
-                    <div className="public-news-feed-meta">
-                      <span>{item.topicName || 'Acompanhamento'}</span>
-                      <span>{item.feedName || 'Fonte'}</span>
-                    </div>
-                    <h3>{item.title || 'Sem título'}</h3>
-                    <p>{item.contentSnippet || 'Sem resumo disponível.'}</p>
-                  </article>
-                ))}
-                {secondaryItems.length === 0 && (
-                  <div className="public-news-feed-card">
-                    <h3>Sem destaques adicionais</h3>
-                    <p>Assim que houver novos conteúdos, eles aparecerão aqui.</p>
-                  </div>
-                )}
-              </div>
-              <div className="public-news-latest">
-                <div className="public-news-latest-card">
-                  <h4>Agenda</h4>
-                  <div className="public-news-latest-list">
-                    {listItems.map((item, index) => (
-                      <a key={`${item.link || item.title}-list-${index}`} href={item.link || '#'} target="_blank" rel="noreferrer">
-                        <h3>{item.title || 'Sem título'}</h3>
-                        <p>{item.feedName || 'Fonte'} - {formatDate(getItemDate(item))}</p>
-                      </a>
-                    ))}
-                    {listItems.length === 0 && <p>Nenhuma notícia recente.</p>}
-                  </div>
-                </div>
-                <div className="public-news-latest-card">
-                  <h4>Últimas</h4>
-                  <div className="public-news-latest-list">
-                    {latestItems.map((item, index) => (
-                      <a key={`${item.link || item.title}-latest-${index}`} href={item.link || '#'} target="_blank" rel="noreferrer">
-                        <h3>{item.title || 'Sem título'}</h3>
-                        <p>{item.feedName || 'Fonte'} - {formatTime(getItemDate(item))}</p>
-                      </a>
-                    ))}
-                    {latestItems.length === 0 && <p>Nenhuma notícia agora.</p>}
-                  </div>
-                </div>
-              </div>
-            </section>
+          <div className="public-news-grid">
+            <div className="news-card news-card--empty">{error}</div>
           </div>
         )}
+        {(!loading || hasLoaded) && (
+          <section className="public-news-grid">
+            {items.map((item, index) => (
+              <article key={`${item.link || item.title}-card-${index}`} className="news-card">
+                <div className="news-card-header">
+                  <div className="news-card-source">
+                    <img
+                      className="news-card-favicon"
+                      src={getFaviconUrl(item.feedUrl || item.link)}
+                      alt=""
+                      onError={handleFaviconError}
+                    />
+                    <div>
+                      <div className="news-card-feed">{item.feedName || 'Fonte'}</div>
+                      <div className="news-card-time">{formatTime(getItemDate(item))}</div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="news-card-share"
+                    onClick={() => handleShare(item)}
+                    aria-label="Compartilhar"
+                  >
+                    <span className="material-icons-outlined">share</span>
+                  </button>
+                </div>
+                <a className="news-card-title" href={item.link || '#'} target="_blank" rel="noreferrer">
+                  {item.title || 'Sem titulo'}
+                </a>
+                <p className="news-card-snippet">{item.contentSnippet || 'Sem resumo disponivel.'}</p>
+                <div className="news-card-footer">
+                  <span>{item.topicName || 'Acompanhamento'}</span>
+                  <span>{formatDate(getItemDate(item))}</span>
+                </div>
+              </article>
+            ))}
+            {items.length === 0 && (
+              <div className="news-card news-card--empty">Sem noticias disponiveis no momento.</div>
+            )}
+          </section>
+        )}
       </main>
-      <footer className="public-news-footer">
-        Atualizado em {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Powered by RSS Leitor
-      </footer>
     </div>
   );
 }
