@@ -266,7 +266,8 @@ function PublicWatchSite() {
 
     const updateSizes = () => {
       const fullWidth = track.scrollWidth;
-      tickerHalfWidthRef.current = fullWidth / 2;
+      const half = fullWidth / 2;
+      tickerHalfWidthRef.current = Number.isFinite(half) && half > 0 ? half : 1;
       if (!Number.isFinite(tickerOffsetRef.current)) {
         tickerOffsetRef.current = 0;
       }
@@ -287,7 +288,7 @@ function PublicWatchSite() {
       tickerOffsetRef.current -= (speed * delta) / 1000;
       const halfWidth = tickerHalfWidthRef.current || 0;
       if (halfWidth && tickerOffsetRef.current <= -halfWidth) {
-        tickerOffsetRef.current = 0;
+        tickerOffsetRef.current += halfWidth;
       }
       track.style.transform = `translateX(${tickerOffsetRef.current}px)`;
       tickerFrameRef.current = window.requestAnimationFrame(animate);

@@ -122,6 +122,7 @@
   display: flex;
   gap: 28px;
   padding-left: 16px;
+  will-change: transform;
 }
 
 .ticker-item {
