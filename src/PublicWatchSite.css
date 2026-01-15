@@ -252,7 +252,13 @@
     grid-auto-rows: auto;
   }
   .news-card {
-    padding: 16px;
+    padding: 18px;
+  }
+  .news-card-title {
+    font-size: 20px;
+  }
+  .news-card-snippet {
+    font-size: 14px;
   }
 }
 
@@ -260,5 +266,21 @@
   .public-news-main--full {
     height: auto;
     min-height: 100vh;
+  }
+  .public-news-main {
+    padding: 16px 14px 26px;
+  }
+  .news-card {
+    padding: 20px;
+    border-radius: 22px;
+  }
+  .news-card-title {
+    font-size: 22px;
+  }
+  .news-card-snippet {
+    font-size: 15px;
+  }
+  .news-card-footer {
+    font-size: 12px;
   }
 }
