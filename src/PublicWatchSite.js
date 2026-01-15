@@ -215,17 +215,6 @@ function PublicWatchSite() {
   }, [nextRefreshAt]);
 
   const items = data.items || [];
-  const tickerItems = useMemo(() => {
-    if (!Array.isArray(items)) return [];
-    return items.slice(0, 30).map((item, index) => ({
-      id: item.link || item.title || `ticker-${index}`,
-      title: item.title || 'Sem titulo',
-      summary: getFirstSentence(item.contentSnippet || ''),
-      link: item.link || '#',
-      favicon: getFaviconUrl(item.feedUrl || item.link)
-    }));
-  }, [items]);
-
   const getFaviconUrl = (url) => {
     if (!url) return '';
     try {
@@ -241,6 +230,17 @@ function PublicWatchSite() {
     event.currentTarget.dataset.fallbackApplied = '1';
     event.currentTarget.src = fallbackFavicon;
   };
+
+  const tickerItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
+    return items.slice(0, 30).map((item, index) => ({
+      id: item.link || item.title || `ticker-${index}`,
+      title: item.title || 'Sem titulo',
+      summary: getFirstSentence(item.contentSnippet || ''),
+      link: item.link || '#',
+      favicon: getFaviconUrl(item.feedUrl || item.link)
+    }));
+  }, [items]);
 
   const handleShare = async (item) => {
     const url = item?.link || '';
