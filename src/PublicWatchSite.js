@@ -108,10 +108,16 @@ function PublicWatchSite() {
   const [seenMap, setSeenMap] = useState(() => readSeenMap());
   const [activeItem, setActiveItem] = useState(null);
   const [tickerEnabled, setTickerEnabled] = useState(true);
-  const [tickerSpeed, setTickerSpeed] = useState(120);
+  const [tickerSpeed, setTickerSpeed] = useState(60);
   const [menuOpen, setMenuOpen] = useState(false);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
+  const tickerTrackRef = useRef(null);
+  const tickerOffsetRef = useRef(0);
+  const tickerSpeedRef = useRef(tickerSpeed);
+  const tickerFrameRef = useRef(null);
+  const tickerLastRef = useRef(0);
+  const tickerHalfWidthRef = useRef(0);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem(THEME_KEY);
@@ -244,6 +250,60 @@ function PublicWatchSite() {
     }));
   }, [items]);
 
+  useEffect(() => {
+    tickerSpeedRef.current = tickerSpeed;
+  }, [tickerSpeed]);
+
+  useEffect(() => {
+    if (!tickerEnabled) {
+      if (tickerTrackRef.current) {
+        tickerTrackRef.current.style.transform = 'translateX(0px)';
+      }
+      return undefined;
+    }
+    const track = tickerTrackRef.current;
+    if (!track) return undefined;
+
+    const updateSizes = () => {
+      const fullWidth = track.scrollWidth;
+      tickerHalfWidthRef.current = fullWidth / 2;
+      if (!Number.isFinite(tickerOffsetRef.current)) {
+        tickerOffsetRef.current = 0;
+      }
+    };
+
+    updateSizes();
+    const handleResize = () => updateSizes();
+    window.addEventListener('resize', handleResize);
+
+    const animate = (timestamp) => {
+      if (!tickerLastRef.current) {
+        tickerLastRef.current = timestamp;
+      }
+      const delta = Math.min(64, timestamp - tickerLastRef.current);
+      tickerLastRef.current = timestamp;
+
+      const speed = tickerSpeedRef.current;
+      tickerOffsetRef.current -= (speed * delta) / 1000;
+      const halfWidth = tickerHalfWidthRef.current || 0;
+      if (halfWidth && tickerOffsetRef.current <= -halfWidth) {
+        tickerOffsetRef.current = 0;
+      }
+      track.style.transform = `translateX(${tickerOffsetRef.current}px)`;
+      tickerFrameRef.current = window.requestAnimationFrame(animate);
+    };
+
+    tickerFrameRef.current = window.requestAnimationFrame(animate);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (tickerFrameRef.current) {
+        window.cancelAnimationFrame(tickerFrameRef.current);
+        tickerFrameRef.current = null;
+      }
+      tickerLastRef.current = 0;
+    };
+  }, [tickerEnabled, tickerItems.length]);
+
   const handleShare = async (item) => {
     const url = item?.link || '';
     if (!url) return;
@@ -326,10 +386,10 @@ function PublicWatchSite() {
                       value={tickerSpeed}
                       onChange={(event) => setTickerSpeed(Number(event.target.value))}
                     >
-                      <option value={90}>Rapido</option>
-                      <option value={120}>Normal</option>
-                      <option value={150}>Lento</option>
-                      <option value={180}>Muito lento</option>
+                      <option value={40}>Muito lento</option>
+                      <option value={60}>Lento</option>
+                      <option value={80}>Normal</option>
+                      <option value={100}>Rapido</option>
                     </select>
                   </label>
                 </div>
@@ -374,9 +434,8 @@ function PublicWatchSite() {
       {tickerEnabled && tickerItems.length > 0 && (
         <div className="public-news-ticker">
           <div
-            key={`ticker-${tickerSpeed}`}
             className="ticker-track"
-            style={{ animation: `ticker-scroll ${tickerSpeed}s linear infinite` }}
+            ref={tickerTrackRef}
           >
             {[...tickerItems, ...tickerItems].map((item, idx) => (
               <a
