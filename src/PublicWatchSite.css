@@ -125,6 +125,12 @@
   will-change: transform;
 }
 
+.ticker-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+}
+
 .ticker-item {
   display: inline-flex;
   align-items: center;

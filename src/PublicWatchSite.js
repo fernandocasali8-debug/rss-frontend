@@ -113,6 +113,7 @@ function PublicWatchSite() {
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
   const tickerTrackRef = useRef(null);
+  const tickerGroupRef = useRef(null);
   const tickerOffsetRef = useRef(0);
   const tickerSpeedRef = useRef(tickerSpeed);
   const tickerFrameRef = useRef(null);
@@ -265,9 +266,8 @@ function PublicWatchSite() {
     if (!track) return undefined;
 
     const updateSizes = () => {
-      const fullWidth = track.scrollWidth;
-      const half = fullWidth / 2;
-      tickerHalfWidthRef.current = Number.isFinite(half) && half > 0 ? half : 1;
+      const groupWidth = tickerGroupRef.current?.scrollWidth || 0;
+      tickerHalfWidthRef.current = Number.isFinite(groupWidth) && groupWidth > 0 ? groupWidth : 1;
       if (!Number.isFinite(tickerOffsetRef.current)) {
         tickerOffsetRef.current = 0;
       }
@@ -438,25 +438,48 @@ function PublicWatchSite() {
             className="ticker-track"
             ref={tickerTrackRef}
           >
-            {[...tickerItems, ...tickerItems].map((item, idx) => (
-              <a
-                key={`${item.id}-tick-${idx}`}
-                className="ticker-item"
-                href={item.link}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {item.favicon && (
-                  <img
-                    className="ticker-favicon"
-                    src={item.favicon}
-                    alt=""
-                    onError={handleFaviconError}
-                  />
-                )}
-                <span className="ticker-title">{item.title}</span>
-              </a>
-            ))}
+            <div className="ticker-group" ref={tickerGroupRef}>
+              {tickerItems.map((item, idx) => (
+                <a
+                  key={`${item.id}-tick-a-${idx}`}
+                  className="ticker-item"
+                  href={item.link}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {item.favicon && (
+                    <img
+                      className="ticker-favicon"
+                      src={item.favicon}
+                      alt=""
+                      onError={handleFaviconError}
+                    />
+                  )}
+                  <span className="ticker-title">{item.title}</span>
+                </a>
+              ))}
+            </div>
+            <div className="ticker-group" aria-hidden="true">
+              {tickerItems.map((item, idx) => (
+                <a
+                  key={`${item.id}-tick-b-${idx}`}
+                  className="ticker-item"
+                  href={item.link}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {item.favicon && (
+                    <img
+                      className="ticker-favicon"
+                      src={item.favicon}
+                      alt=""
+                      onError={handleFaviconError}
+                    />
+                  )}
+                  <span className="ticker-title">{item.title}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       )}
