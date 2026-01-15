@@ -31,6 +31,13 @@ const formatDateTime = (value) => {
 };
 
 const getItemDate = (item) => item.isoDate || item.pubDate || '';
+const getFirstSentence = (text) => {
+  if (!text) return '';
+  const normalized = String(text).replace(/\s+/g, ' ').trim();
+  const match = normalized.match(/^(.*?[.!?])\s/);
+  if (match && match[1]) return match[1];
+  return normalized;
+};
 
 const readCache = (email) => {
   if (!email) return null;
@@ -208,6 +215,16 @@ function PublicWatchSite() {
   }, [nextRefreshAt]);
 
   const items = data.items || [];
+  const tickerItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
+    return items.slice(0, 30).map((item, index) => ({
+      id: item.link || item.title || `ticker-${index}`,
+      title: item.title || 'Sem titulo',
+      summary: getFirstSentence(item.contentSnippet || ''),
+      link: item.link || '#',
+      favicon: getFaviconUrl(item.feedUrl || item.link)
+    }));
+  }, [items]);
 
   const getFaviconUrl = (url) => {
     if (!url) return '';
@@ -313,6 +330,34 @@ function PublicWatchSite() {
           </button>
         </div>
       </div>
+      {tickerItems.length > 0 && (
+        <div className="public-news-ticker">
+          <div className="ticker-track">
+            {[...tickerItems, ...tickerItems].map((item, idx) => (
+              <a
+                key={`${item.id}-tick-${idx}`}
+                className="ticker-item"
+                href={item.link}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {item.favicon && (
+                  <img
+                    className="ticker-favicon"
+                    src={item.favicon}
+                    alt=""
+                    onError={handleFaviconError}
+                  />
+                )}
+                <span className="ticker-title">{item.title}</span>
+                {item.summary && (
+                  <span className="ticker-summary">- {item.summary}</span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       <main className="public-news-main public-news-main--full">
         {loading && !hasLoaded && (
           <div className="public-news-grid">
