@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
 import './PublicWatchSite.css';
@@ -8,6 +8,7 @@ const THEME_KEY = 'public-watch-theme';
 const CACHE_KEY = 'public-watch-cache-v1';
 const SEEN_KEY = 'public-watch-seen-v1';
 const REFRESH_INTERVAL = 5 * 60 * 1000;
+const TICKER_REPEAT_COUNT = 20;
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -109,11 +110,9 @@ function PublicWatchSite() {
   const [activeItem, setActiveItem] = useState(null);
   const [tickerEnabled, setTickerEnabled] = useState(true);
   const [tickerSpeed, setTickerSpeed] = useState(40);
-  const [tickerRepeats, setTickerRepeats] = useState(2);
   const [menuOpen, setMenuOpen] = useState(false);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
-  const tickerContainerRef = useRef(null);
   const tickerTrackRef = useRef(null);
   const tickerGroupRef = useRef(null);
   const tickerOffsetRef = useRef(0);
@@ -255,7 +254,7 @@ function PublicWatchSite() {
 
   const tickerItemsExpanded = useMemo(() => {
     if (!tickerItems.length) return [];
-    const repeats = Math.max(2, tickerRepeats);
+    const repeats = TICKER_REPEAT_COUNT;
     const expanded = [];
     for (let i = 0; i < repeats; i += 1) {
       tickerItems.forEach((item, index) => {
@@ -263,7 +262,7 @@ function PublicWatchSite() {
       });
     }
     return expanded;
-  }, [tickerItems, tickerRepeats]);
+  }, [tickerItems]);
 
   useEffect(() => {
     tickerSpeedRef.current = tickerSpeed;
@@ -319,16 +318,6 @@ function PublicWatchSite() {
       tickerLastRef.current = 0;
     };
   }, [tickerEnabled, tickerItemsExpanded.length]);
-
-  useLayoutEffect(() => {
-    if (!tickerEnabled || !tickerItems.length) return;
-    const containerWidth = tickerContainerRef.current?.clientWidth || 0;
-    const groupWidth = tickerGroupRef.current?.scrollWidth || 0;
-    if (!containerWidth || !groupWidth) return;
-    if (groupWidth < containerWidth * 1.2 && tickerRepeats < 12) {
-      setTickerRepeats(prev => Math.min(12, prev + 1));
-    }
-  }, [tickerEnabled, tickerItems.length, tickerRepeats, tickerItemsExpanded.length]);
 
   const handleShare = async (item) => {
     const url = item?.link || '';
@@ -458,7 +447,7 @@ function PublicWatchSite() {
         </div>
       </div>
       {tickerEnabled && tickerItems.length > 0 && (
-        <div className="public-news-ticker" ref={tickerContainerRef}>
+        <div className="public-news-ticker">
           <div
             className="ticker-track"
             ref={tickerTrackRef}

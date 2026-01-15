@@ -123,6 +123,7 @@
   gap: 28px;
   padding-left: 16px;
   will-change: transform;
+  width: max-content;
 }
 
 .ticker-group {
