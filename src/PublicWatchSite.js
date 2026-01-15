@@ -373,7 +373,11 @@ function PublicWatchSite() {
       </div>
       {tickerEnabled && tickerItems.length > 0 && (
         <div className="public-news-ticker">
-          <div className="ticker-track" style={{ animationDuration: `${tickerSpeed}s` }}>
+          <div
+            key={`ticker-${tickerSpeed}`}
+            className="ticker-track"
+            style={{ animationDuration: `${tickerSpeed}s` }}
+          >
             {[...tickerItems, ...tickerItems].map((item, idx) => (
               <a
                 key={`${item.id}-tick-${idx}`}
