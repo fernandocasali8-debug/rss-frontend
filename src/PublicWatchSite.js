@@ -109,9 +109,11 @@ function PublicWatchSite() {
   const [activeItem, setActiveItem] = useState(null);
   const [tickerEnabled, setTickerEnabled] = useState(true);
   const [tickerSpeed, setTickerSpeed] = useState(60);
+  const [tickerRepeats, setTickerRepeats] = useState(2);
   const [menuOpen, setMenuOpen] = useState(false);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
+  const tickerContainerRef = useRef(null);
   const tickerTrackRef = useRef(null);
   const tickerGroupRef = useRef(null);
   const tickerOffsetRef = useRef(0);
@@ -251,6 +253,18 @@ function PublicWatchSite() {
     }));
   }, [items]);
 
+  const tickerItemsExpanded = useMemo(() => {
+    if (!tickerItems.length) return [];
+    const repeats = Math.max(1, tickerRepeats);
+    const expanded = [];
+    for (let i = 0; i < repeats; i += 1) {
+      tickerItems.forEach((item, index) => {
+        expanded.push({ ...item, _key: `${item.id}-r${i}-${index}` });
+      });
+    }
+    return expanded;
+  }, [tickerItems, tickerRepeats]);
+
   useEffect(() => {
     tickerSpeedRef.current = tickerSpeed;
   }, [tickerSpeed]);
@@ -294,6 +308,7 @@ function PublicWatchSite() {
       tickerFrameRef.current = window.requestAnimationFrame(animate);
     };
 
+    tickerOffsetRef.current = 0;
     tickerFrameRef.current = window.requestAnimationFrame(animate);
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -303,7 +318,28 @@ function PublicWatchSite() {
       }
       tickerLastRef.current = 0;
     };
-  }, [tickerEnabled, tickerItems.length]);
+  }, [tickerEnabled, tickerItemsExpanded.length]);
+
+  useEffect(() => {
+    if (!tickerEnabled || !tickerItems.length) return undefined;
+    const measure = () => {
+      const containerWidth = tickerContainerRef.current?.clientWidth || 0;
+      const groupWidth = tickerGroupRef.current?.scrollWidth || 0;
+      if (!containerWidth || !groupWidth) return;
+      const target = containerWidth * 2;
+      const repeatsNeeded = Math.max(1, Math.ceil(target / groupWidth));
+      if (repeatsNeeded > tickerRepeats) {
+        setTickerRepeats(repeatsNeeded);
+      }
+    };
+    const frame = window.requestAnimationFrame(measure);
+    const handleResize = () => window.requestAnimationFrame(measure);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [tickerEnabled, tickerItems.length, tickerRepeats]);
 
   const handleShare = async (item) => {
     const url = item?.link || '';
@@ -433,15 +469,15 @@ function PublicWatchSite() {
         </div>
       </div>
       {tickerEnabled && tickerItems.length > 0 && (
-        <div className="public-news-ticker">
+        <div className="public-news-ticker" ref={tickerContainerRef}>
           <div
             className="ticker-track"
             ref={tickerTrackRef}
           >
             <div className="ticker-group" ref={tickerGroupRef}>
-              {tickerItems.map((item, idx) => (
+              {tickerItemsExpanded.map((item) => (
                 <a
-                  key={`${item.id}-tick-a-${idx}`}
+                  key={`${item._key}-a`}
                   className="ticker-item"
                   href={item.link}
                   target="_blank"
@@ -460,9 +496,9 @@ function PublicWatchSite() {
               ))}
             </div>
             <div className="ticker-group" aria-hidden="true">
-              {tickerItems.map((item, idx) => (
+              {tickerItemsExpanded.map((item) => (
                 <a
-                  key={`${item.id}-tick-b-${idx}`}
+                  key={`${item._key}-b`}
                   className="ticker-item"
                   href={item.link}
                   target="_blank"
