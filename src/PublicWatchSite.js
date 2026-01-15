@@ -6,6 +6,7 @@ import './PublicWatchSite.css';
 const DEFAULT_EMAIL = 'fernandocasali8@gmail.com';
 const THEME_KEY = 'public-watch-theme';
 const CACHE_KEY = 'public-watch-cache-v1';
+const REFRESH_INTERVAL = 5 * 60 * 1000;
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -67,6 +68,9 @@ function PublicWatchSite() {
     cachedEntry?.updatedAt ? new Date(cachedEntry.updatedAt) : null
   ));
   const [theme, setTheme] = useState('light');
+  const [fontScale, setFontScale] = useState(1);
+  const [nextRefreshAt, setNextRefreshAt] = useState(() => Date.now() + REFRESH_INTERVAL);
+  const [countdown, setCountdown] = useState({ minutes: 0, seconds: 0, millis: 0 });
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
 
@@ -92,6 +96,7 @@ function PublicWatchSite() {
     let isMounted = true;
 
     const fetchWatch = ({ initial = false } = {}) => {
+      setNextRefreshAt(Date.now() + REFRESH_INTERVAL);
       if (initial && !hasCacheRef.current) {
         setLoading(true);
       }
@@ -139,7 +144,7 @@ function PublicWatchSite() {
 
     refreshTimerRef.current = setInterval(() => {
       fetchWatch();
-    }, 5 * 60 * 1000);
+    }, REFRESH_INTERVAL);
 
     return () => {
       isMounted = false;
@@ -149,6 +154,19 @@ function PublicWatchSite() {
       }
     };
   }, [queryEmail]);
+
+  useEffect(() => {
+    const tick = () => {
+      const remaining = Math.max(0, nextRefreshAt - Date.now());
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      const millis = Math.floor(remaining % 1000);
+      setCountdown({ minutes, seconds, millis });
+    };
+    tick();
+    const timer = setInterval(tick, 50);
+    return () => clearInterval(timer);
+  }, [nextRefreshAt]);
 
   const items = data.items || [];
 
@@ -187,8 +205,60 @@ function PublicWatchSite() {
     }
   };
 
+  const handleThemeToggle = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const handleFontScale = (delta) => {
+    setFontScale((prev) => {
+      const next = Math.min(1.15, Math.max(0.9, Number((prev + delta).toFixed(2))));
+      return next;
+    });
+  };
+
+  const formatCountdown = () => (
+    `${String(countdown.minutes).padStart(2, '0')}:` +
+    `${String(countdown.seconds).padStart(2, '0')}.` +
+    `${String(countdown.millis).padStart(3, '0')}`
+  );
+
   return (
-    <div className="public-news">
+    <div className="public-news" style={{ '--font-scale': fontScale }}>
+      <div className="public-news-top">
+        <div className="public-news-timer">
+          <span className="public-news-rec" />
+          <span className="public-news-time">{formatCountdown()}</span>
+          <span className="public-news-label">Proxima atualizacao</span>
+        </div>
+        <div className="public-news-tools">
+          <button
+            type="button"
+            className="public-news-tool"
+            onClick={() => handleFontScale(-0.05)}
+            aria-label="Diminuir fonte"
+          >
+            <span className="material-icons-outlined">remove</span>
+          </button>
+          <button
+            type="button"
+            className="public-news-tool"
+            onClick={() => handleFontScale(0.05)}
+            aria-label="Aumentar fonte"
+          >
+            <span className="material-icons-outlined">add</span>
+          </button>
+          <button
+            type="button"
+            className="public-news-tool"
+            onClick={handleThemeToggle}
+            aria-label="Alternar tema"
+          >
+            <span className="material-icons-outlined">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+        </div>
+      </div>
       <main className="public-news-main public-news-main--full">
         {loading && !hasLoaded && (
           <div className="public-news-grid">
