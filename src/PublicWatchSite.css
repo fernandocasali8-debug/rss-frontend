@@ -431,14 +431,14 @@
 .news-modal-title {
   text-decoration: none;
   color: var(--ink);
-  font-size: 26px;
+  font-size: 34px;
   font-family: "Sora", "Roboto", sans-serif;
   line-height: 1.25;
 }
 
 .news-modal-snippet {
   margin: 0;
-  font-size: 15px;
+  font-size: 20px;
   color: var(--muted);
   line-height: 1.7;
 }
@@ -457,6 +457,6 @@
     padding: 22px;
   }
   .news-modal-title {
-    font-size: 22px;
+    font-size: 28px;
   }
 }
