@@ -122,7 +122,6 @@
   display: flex;
   gap: 28px;
   padding-left: 16px;
-  animation: ticker-scroll 120s linear infinite;
 }
 
 .ticker-item {

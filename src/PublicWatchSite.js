@@ -376,7 +376,7 @@ function PublicWatchSite() {
           <div
             key={`ticker-${tickerSpeed}`}
             className="ticker-track"
-            style={{ animationDuration: `${tickerSpeed}s` }}
+            style={{ animation: `ticker-scroll ${tickerSpeed}s linear infinite` }}
           >
             {[...tickerItems, ...tickerItems].map((item, idx) => (
               <a
