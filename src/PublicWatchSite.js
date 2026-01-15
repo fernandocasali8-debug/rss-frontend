@@ -6,6 +6,7 @@ import './PublicWatchSite.css';
 const DEFAULT_EMAIL = 'fernandocasali8@gmail.com';
 const THEME_KEY = 'public-watch-theme';
 const CACHE_KEY = 'public-watch-cache-v1';
+const SEEN_KEY = 'public-watch-seen-v1';
 const REFRESH_INTERVAL = 5 * 60 * 1000;
 
 const formatDate = (value) => {
@@ -20,6 +21,13 @@ const formatTime = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 };
 
 const getItemDate = (item) => item.isoDate || item.pubDate || '';
@@ -54,6 +62,25 @@ const writeCache = (email, data) => {
   }
 };
 
+const readSeenMap = () => {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+const writeSeenMap = (map) => {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify(map || {}));
+  } catch (e) {
+    // ignore
+  }
+};
+
 function PublicWatchSite() {
   const queryEmail = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -71,6 +98,8 @@ function PublicWatchSite() {
   const [fontScale, setFontScale] = useState(1);
   const [nextRefreshAt, setNextRefreshAt] = useState(() => Date.now() + REFRESH_INTERVAL);
   const [countdown, setCountdown] = useState({ minutes: 0, seconds: 0, millis: 0 });
+  const [seenMap, setSeenMap] = useState(() => readSeenMap());
+  const [activeItem, setActiveItem] = useState(null);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
 
@@ -91,6 +120,16 @@ function PublicWatchSite() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        setActiveItem(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -205,6 +244,21 @@ function PublicWatchSite() {
     }
   };
 
+  const markSeen = (item) => {
+    const key = item?.link || item?.title || '';
+    if (!key) return;
+    setSeenMap((prev) => {
+      const next = { ...prev, [key]: new Date().toISOString() };
+      writeSeenMap(next);
+      return next;
+    });
+  };
+
+  const handleOpenItem = (item) => {
+    markSeen(item);
+    setActiveItem(item);
+  };
+
   const handleThemeToggle = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
@@ -280,7 +334,19 @@ function PublicWatchSite() {
         {(!loading || hasLoaded) && (
           <section className="public-news-grid">
             {items.map((item, index) => (
-              <article key={`${item.link || item.title}-card-${index}`} className="news-card">
+              <article
+                key={`${item.link || item.title}-card-${index}`}
+                className="news-card"
+                onClick={() => handleOpenItem(item)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleOpenItem(item);
+                  }
+                }}
+              >
                 <div className="news-card-header">
                   <div className="news-card-source">
                     <img
@@ -310,6 +376,11 @@ function PublicWatchSite() {
                 <div className="news-card-footer">
                   <span>{item.topicName || 'Acompanhamento'}</span>
                   <span>{formatDate(getItemDate(item))}</span>
+                  {seenMap[item.link || item.title] && (
+                    <span className="news-card-seen">
+                      Visto {formatTime(seenMap[item.link || item.title])}
+                    </span>
+                  )}
                 </div>
               </article>
             ))}
@@ -317,6 +388,46 @@ function PublicWatchSite() {
               <div className="news-card news-card--empty">Sem noticias disponiveis no momento.</div>
             )}
           </section>
+        )}
+        {activeItem && (
+          <div
+            className="news-modal"
+            onClick={(event) => {
+              if (event.target.classList.contains('news-modal')) {
+                setActiveItem(null);
+              }
+            }}
+          >
+            <div className="news-modal-card">
+              <button
+                type="button"
+                className="news-modal-close"
+                onClick={() => setActiveItem(null)}
+                aria-label="Fechar"
+              >
+                <span className="material-icons-outlined">close</span>
+              </button>
+              <div className="news-modal-head">
+                <img
+                  className="news-card-favicon"
+                  src={getFaviconUrl(activeItem.feedUrl || activeItem.link)}
+                  alt=""
+                  onError={handleFaviconError}
+                />
+                <div>
+                  <div className="news-card-feed">{activeItem.feedName || 'Fonte'}</div>
+                  <div className="news-card-time">{formatDateTime(getItemDate(activeItem))}</div>
+                </div>
+              </div>
+              <a className="news-modal-title" href={activeItem.link || '#'} target="_blank" rel="noreferrer">
+                {activeItem.title || 'Sem titulo'}
+              </a>
+              <p className="news-modal-snippet">{activeItem.contentSnippet || 'Sem resumo disponivel.'}</p>
+              <div className="news-modal-meta">
+                <span>Visto por ultimo: {formatDateTime(seenMap[activeItem.link || activeItem.title])}</span>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
