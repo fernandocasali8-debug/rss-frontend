@@ -107,6 +107,9 @@ function PublicWatchSite() {
   const [countdown, setCountdown] = useState({ minutes: 0, seconds: 0, millis: 0 });
   const [seenMap, setSeenMap] = useState(() => readSeenMap());
   const [activeItem, setActiveItem] = useState(null);
+  const [tickerEnabled, setTickerEnabled] = useState(true);
+  const [tickerSpeed, setTickerSpeed] = useState(120);
+  const [menuOpen, setMenuOpen] = useState(false);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
 
@@ -236,7 +239,6 @@ function PublicWatchSite() {
     return items.slice(0, 30).map((item, index) => ({
       id: item.link || item.title || `ticker-${index}`,
       title: item.title || 'Sem titulo',
-      summary: getFirstSentence(item.contentSnippet || ''),
       link: item.link || '#',
       favicon: getFaviconUrl(item.feedUrl || item.link)
     }));
@@ -296,10 +298,49 @@ function PublicWatchSite() {
   return (
     <div className="public-news" style={{ '--font-scale': fontScale }}>
       <div className="public-news-top">
-        <div className="public-news-timer">
-          <span className="public-news-rec" />
-          <span className="public-news-time">{formatCountdown()}</span>
-          <span className="public-news-label">Proxima atualizacao</span>
+        <div className="public-news-left">
+          <div className={`public-news-menu ${menuOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className="public-news-tool"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Menu"
+            >
+              <span className="material-icons-outlined">menu</span>
+            </button>
+            {menuOpen && (
+              <div className="public-news-dropdown">
+                <div className="dropdown-section">
+                  <div className="dropdown-title">Ticker</div>
+                  <label className="dropdown-row">
+                    <input
+                      type="checkbox"
+                      checked={tickerEnabled}
+                      onChange={(event) => setTickerEnabled(event.target.checked)}
+                    />
+                    <span>Ativar ticker</span>
+                  </label>
+                  <label className="dropdown-row">
+                    <span>Velocidade</span>
+                    <select
+                      value={tickerSpeed}
+                      onChange={(event) => setTickerSpeed(Number(event.target.value))}
+                    >
+                      <option value={90}>Rapido</option>
+                      <option value={120}>Normal</option>
+                      <option value={150}>Lento</option>
+                      <option value={180}>Muito lento</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="public-news-timer">
+            <span className="public-news-rec" />
+            <span className="public-news-time">{formatCountdown()}</span>
+            <span className="public-news-label">Proxima atualizacao</span>
+          </div>
         </div>
         <div className="public-news-tools">
           <button
@@ -330,9 +371,9 @@ function PublicWatchSite() {
           </button>
         </div>
       </div>
-      {tickerItems.length > 0 && (
+      {tickerEnabled && tickerItems.length > 0 && (
         <div className="public-news-ticker">
-          <div className="ticker-track">
+          <div className="ticker-track" style={{ animationDuration: `${tickerSpeed}s` }}>
             {[...tickerItems, ...tickerItems].map((item, idx) => (
               <a
                 key={`${item.id}-tick-${idx}`}
@@ -350,9 +391,6 @@ function PublicWatchSite() {
                   />
                 )}
                 <span className="ticker-title">{item.title}</span>
-                {item.summary && (
-                  <span className="ticker-summary">- {item.summary}</span>
-                )}
               </a>
             ))}
           </div>
