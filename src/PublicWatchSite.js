@@ -108,12 +108,10 @@ function PublicWatchSite() {
   const [seenMap, setSeenMap] = useState(() => readSeenMap());
   const [activeItem, setActiveItem] = useState(null);
   const [tickerEnabled, setTickerEnabled] = useState(true);
-  const [tickerSpeed, setTickerSpeed] = useState(60);
-  const [tickerRepeats, setTickerRepeats] = useState(2);
+  const [tickerSpeed, setTickerSpeed] = useState(40);
   const [menuOpen, setMenuOpen] = useState(false);
   const refreshTimerRef = useRef(null);
   const hasCacheRef = useRef(Boolean(cachedEntry));
-  const tickerContainerRef = useRef(null);
   const tickerTrackRef = useRef(null);
   const tickerGroupRef = useRef(null);
   const tickerOffsetRef = useRef(0);
@@ -255,7 +253,7 @@ function PublicWatchSite() {
 
   const tickerItemsExpanded = useMemo(() => {
     if (!tickerItems.length) return [];
-    const repeats = Math.max(1, tickerRepeats);
+    const repeats = tickerItems.length < 8 ? 8 : 4;
     const expanded = [];
     for (let i = 0; i < repeats; i += 1) {
       tickerItems.forEach((item, index) => {
@@ -263,7 +261,7 @@ function PublicWatchSite() {
       });
     }
     return expanded;
-  }, [tickerItems, tickerRepeats]);
+  }, [tickerItems]);
 
   useEffect(() => {
     tickerSpeedRef.current = tickerSpeed;
@@ -319,27 +317,6 @@ function PublicWatchSite() {
       tickerLastRef.current = 0;
     };
   }, [tickerEnabled, tickerItemsExpanded.length]);
-
-  useEffect(() => {
-    if (!tickerEnabled || !tickerItems.length) return undefined;
-    const measure = () => {
-      const containerWidth = tickerContainerRef.current?.clientWidth || 0;
-      const groupWidth = tickerGroupRef.current?.scrollWidth || 0;
-      if (!containerWidth || !groupWidth) return;
-      const target = containerWidth * 2;
-      const repeatsNeeded = Math.max(1, Math.ceil(target / groupWidth));
-      if (repeatsNeeded > tickerRepeats) {
-        setTickerRepeats(repeatsNeeded);
-      }
-    };
-    const frame = window.requestAnimationFrame(measure);
-    const handleResize = () => window.requestAnimationFrame(measure);
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [tickerEnabled, tickerItems.length, tickerRepeats]);
 
   const handleShare = async (item) => {
     const url = item?.link || '';
@@ -423,10 +400,10 @@ function PublicWatchSite() {
                       value={tickerSpeed}
                       onChange={(event) => setTickerSpeed(Number(event.target.value))}
                     >
-                      <option value={40}>Muito lento</option>
-                      <option value={60}>Lento</option>
-                      <option value={80}>Normal</option>
-                      <option value={100}>Rapido</option>
+                      <option value={15}>Muito lento</option>
+                      <option value={25}>Lento</option>
+                      <option value={40}>Normal</option>
+                      <option value={70}>Rapido</option>
                     </select>
                   </label>
                 </div>
@@ -469,7 +446,7 @@ function PublicWatchSite() {
         </div>
       </div>
       {tickerEnabled && tickerItems.length > 0 && (
-        <div className="public-news-ticker" ref={tickerContainerRef}>
+        <div className="public-news-ticker">
           <div
             className="ticker-track"
             ref={tickerTrackRef}
