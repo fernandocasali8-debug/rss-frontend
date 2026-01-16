@@ -19,6 +19,7 @@ import AdminApp from './AdminApp';
 import TeamPage from './TeamPage';
 import PublicSite from './PublicSite';
 import PublicWatchSite from './PublicWatchSite';
+import LiveModePage from './LiveModePage';
 import XGeneratorPage from './XGeneratorPage';
 import Sidebar from './Sidebar';
 import {
@@ -1039,6 +1040,9 @@ function App() {
   }
   if (pathname.startsWith('/labs/x-rss')) {
     return <XGeneratorPage />;
+  }
+  if (pathname.startsWith('/live')) {
+    return <LiveModePage />;
   }
   if (pathname.startsWith('/team')) {
     return <MainApp initialPage="team" />;
