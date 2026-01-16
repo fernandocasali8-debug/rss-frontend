@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
