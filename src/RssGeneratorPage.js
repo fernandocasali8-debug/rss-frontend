@@ -150,7 +150,7 @@ export default function RssGeneratorPage() {
     }
   };
 
-  const handleDelete = async (entry) => {
+  const handleDelete = useCallback(async (entry) => {
     if (!entry?.id) return;
     setActionState({ id: entry.id, type: 'delete' });
     setError('');
@@ -168,7 +168,7 @@ export default function RssGeneratorPage() {
     } finally {
       setActionState({ id: '', type: '' });
     }
-  };
+  }, [fetchGenerated]);
 
   const handleAddFeed = async (entry) => {
     if (!entry?.feedUrl) return;

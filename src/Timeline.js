@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Timeline.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';

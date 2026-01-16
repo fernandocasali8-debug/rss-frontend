@@ -224,7 +224,7 @@ export default function DisplayMode() {
     fetchWeather();
     const interval = setInterval(fetchWeather, weatherConfig.refreshMs);
     return () => clearInterval(interval);
-  }, [weatherConfig.enabled, weatherConfig.refreshMs, weatherCitiesKey]);
+  }, [weatherConfig.enabled, weatherConfig.refreshMs, weatherConfig.cities, weatherCitiesKey]);
 
   useEffect(() => {
     if (queue.length <= 1) return undefined;

@@ -507,6 +507,23 @@ export default function ConfigPage({
       });
   }, []);
 
+  const fetchSitePosts = React.useCallback(async (slugValue) => {
+    const slug = slugValue || siteConfig.slug;
+    if (!slug) return;
+    setSitePostsLoading(true);
+    setSitePostsError('');
+    try {
+      const res = await apiFetch(`${API_BASE}/site/${slug}/posts`);
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      setSitePosts(Array.isArray(data.posts) ? data.posts : []);
+    } catch (err) {
+      setSitePostsError('N?o foi poss?vel carregar o log.');
+    } finally {
+      setSitePostsLoading(false);
+    }
+  }, [siteConfig.slug]);
+
   React.useEffect(() => {
     apiFetch(API_BASE + '/site/config')
       .then(res => res.json())
@@ -788,23 +805,6 @@ export default function ConfigPage({
       setAiSaving(false);
     }
   };
-
-  const fetchSitePosts = React.useCallback(async (slugValue) => {
-    const slug = slugValue || siteConfig.slug;
-    if (!slug) return;
-    setSitePostsLoading(true);
-    setSitePostsError('');
-    try {
-      const res = await apiFetch(`${API_BASE}/site/${slug}/posts`);
-      const data = await res.json();
-      if (!res.ok) throw new Error();
-      setSitePosts(Array.isArray(data.posts) ? data.posts : []);
-    } catch (err) {
-      setSitePostsError('N?o foi poss?vel carregar o log.');
-    } finally {
-      setSitePostsLoading(false);
-    }
-  }, [siteConfig.slug]);
 
   const saveSiteConfig = async () => {
     setSiteSaving(true);
