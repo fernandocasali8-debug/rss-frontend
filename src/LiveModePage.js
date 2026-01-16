@@ -40,8 +40,7 @@ export default function LiveModePage() {
   const initialCode = (params.get('code') || '').toUpperCase();
   const obsMode = params.get('obs') === '1';
   const [authUser, setAuthUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [mode, setMode] = useState(initialCode ? 'guest' : 'host');
+  const [, setAuthLoading] = useState(true);
   const [roomCode, setRoomCode] = useState(initialCode);
   const [roomExpiresAt, setRoomExpiresAt] = useState('');
   const [status, setStatus] = useState('');
