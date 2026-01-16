@@ -126,6 +126,7 @@ export default function LiveModePage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [recording, setRecording] = useState(false);
+  const [copyMessage, setCopyMessage] = useState('');
 
   const wsRef = useRef(null);
   const clientIdRef = useRef('');
@@ -537,6 +538,25 @@ export default function LiveModePage() {
     return list;
   }, [localStream, remoteStreams, peers, userName]);
 
+  const liveUrl = useMemo(() => (
+    roomCode ? `${window.location.origin}/live?code=${roomCode}` : ''
+  ), [roomCode]);
+  const obsUrl = useMemo(() => (
+    roomCode ? `${window.location.origin}/live?code=${roomCode}&obs=1` : ''
+  ), [roomCode]);
+
+  const handleCopy = async (value) => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyMessage('Copiado!');
+      setTimeout(() => setCopyMessage(''), 2000);
+    } catch (e) {
+      setCopyMessage('Nao foi possivel copiar.');
+      setTimeout(() => setCopyMessage(''), 2000);
+    }
+  };
+
   return (
     <div
       className={`live-root ${obsMode ? 'is-obs' : ''}`}
@@ -566,24 +586,59 @@ export default function LiveModePage() {
         {!obsMode && (
           <aside className="live-panel">
             <h2>Modo Live</h2>
-            <p>Crie uma sala e envie o codigo para ate 5 convidados.</p>
+            <p>Crie uma sala (host) ou entre com o codigo (convidado).</p>
             <div className="live-field">
               <label>Seu nome</label>
               <input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Nome na transmissao" />
             </div>
-            <div className="live-buttons">
+            <div className="live-section">
+              <div className="live-section-title">
+                <span>Host (quem cria a sala)</span>
+                <span className="live-badge">Host</span>
+              </div>
+              <p className="live-section-hint">Clique para gerar o codigo e compartilhar com os convidados.</p>
               <button type="button" onClick={handleCreateRoom}>Criar sala</button>
-              <button type="button" onClick={handleJoinRoom}>Entrar com codigo</button>
-              <button type="button" className="secondary" onClick={handleLeave}>Sair</button>
+              {roomCode && (
+                <div className="live-links">
+                  <div className="live-link-row">
+                    <span className="live-link-label">Codigo</span>
+                    <span className="live-link-value">{roomCode}</span>
+                    <button type="button" onClick={() => handleCopy(roomCode)}>Copiar</button>
+                  </div>
+                  <div className="live-link-row">
+                    <span className="live-link-label">Link convidado</span>
+                    <span className="live-link-value">{liveUrl}</span>
+                    <button type="button" onClick={() => handleCopy(liveUrl)}>Copiar</button>
+                  </div>
+                  <div className="live-link-row">
+                    <span className="live-link-label">Link OBS</span>
+                    <span className="live-link-value">{obsUrl}</span>
+                    <button type="button" onClick={() => handleCopy(obsUrl)}>Copiar</button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="live-field">
-              <label>Codigo da sala</label>
-              <input value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} placeholder="ABC123" />
+
+            <div className="live-section">
+              <div className="live-section-title">
+                <span>Convidado</span>
+                <span className="live-badge secondary">Guest</span>
+              </div>
+              <p className="live-section-hint">Insira o codigo recebido para entrar.</p>
+              <div className="live-field">
+                <label>Codigo da sala</label>
+                <input value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} placeholder="ABC123" />
+              </div>
+              <div className="live-buttons">
+                <button type="button" onClick={handleJoinRoom}>Entrar com codigo</button>
+                <button type="button" className="secondary" onClick={handleLeave}>Sair</button>
+              </div>
             </div>
             <div className="live-meta">
               <div>Expira em: {roomExpiresAt ? new Date(roomExpiresAt).toLocaleTimeString('pt-BR') : '-'}</div>
               <div>Participantes: {peers.length + (localStream ? 1 : 0)}/{MAX_PEERS}</div>
             </div>
+            {copyMessage && <div className="live-status">{copyMessage}</div>}
             {status && <div className="live-status">{status}</div>}
             <div className="live-layout-controls">
               <label>Layout</label>

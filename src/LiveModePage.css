@@ -95,6 +95,84 @@
   gap: 8px;
 }
 
+.live-panel button {
+  background: #2563eb;
+  border: none;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.live-panel button.secondary {
+  background: #1f2937;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.live-section {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.live-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.live-section-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.live-badge {
+  background: rgba(37, 99, 235, 0.2);
+  color: #93c5fd;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.live-badge.secondary {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+.live-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-link-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.live-link-label {
+  color: #94a3b8;
+}
+
+.live-link-value {
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .live-buttons button {
   background: #2563eb;
   border: none;
