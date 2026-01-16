@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 
 export default function FeedList({ onSelectFeed }) {

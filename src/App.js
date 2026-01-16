@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -274,8 +274,8 @@ function MainApp({ initialPage, betaMode = false }) {
   const [eventsError, setEventsError] = useState('');
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [teamAdminEnabled, setTeamAdminEnabled] = useState(false);
-  const [teamMemberTag, setTeamMemberTag] = useState('');
+  const [teamAdminEnabled] = useState(false);
+  const [teamMemberTag] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [tickerItems, setTickerItems] = useState([]);
   const [tickerConfig, setTickerConfig] = useState({
@@ -310,7 +310,7 @@ function MainApp({ initialPage, betaMode = false }) {
         .filter(Boolean);
       return items.length ? { ...section, items } : null;
     }).filter(Boolean)
-  ), [userPlan, teamAdminEnabled]);
+  ), [allowedKeys]);
   const flatRoutes = useMemo(() => (
     routeSections.flatMap((section) => (
       section.items.flatMap((item) => (item.subItems ? [item, ...item.subItems] : [item]))
@@ -501,11 +501,11 @@ function MainApp({ initialPage, betaMode = false }) {
     return () => window.removeEventListener('dashboard:navigate', handleDashboardNavigate);
   }, [allowedKeys]);
 
-  const handleSelectPage = (nextPage) => {
+  const handleSelectPage = useCallback((nextPage) => {
     if (!allowedKeys.includes(nextPage)) return;
     setPage(nextPage);
     setSidebarOpen(false);
-  };
+  }, [allowedKeys]);
 
   const handleCopyText = async (text) => {
     if (!text) return;
@@ -951,7 +951,7 @@ function MainApp({ initialPage, betaMode = false }) {
           {tickerConfig.enabled && (
             <div
               className={`ticker-bar ${tickerConfig.pauseOnHover ? 'ticker-pause' : ''}`}
-              style={{ ['--ticker-speed']: `${tickerConfig.speed}s` }}
+              style={{ '--ticker-speed': `${tickerConfig.speed}s` }}
             >
               <div className="ticker-label">Últimas:</div>
               <div className="ticker-track">

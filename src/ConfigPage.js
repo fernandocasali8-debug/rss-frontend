@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 import FeedForm from './FeedForm';
 import { API_BASE, apiFetch } from './api';
@@ -317,7 +317,7 @@ export default function ConfigPage({
   const [sheetsStatus, setSheetsStatus] = React.useState({ connected: false, spreadsheetId: '' });
   const [sheetsSpreadsheetId, setSheetsSpreadsheetId] = React.useState('');
   const [sheetsMessage, setSheetsMessage] = React.useState('');
-  const [sheetsLoading, setSheetsLoading] = React.useState(false);
+  const [, setSheetsLoading] = React.useState(false);
   const [sheetsExporting, setSheetsExporting] = React.useState(false);
   const [sheetsPeriod, setSheetsPeriod] = React.useState('24h');
   const [driveStatus, setDriveStatus] = React.useState({
@@ -519,7 +519,7 @@ export default function ConfigPage({
       .catch(() => {
         // ignore
       });
-  }, []);
+  }, [fetchSitePosts]);
 
   React.useEffect(() => {
     apiFetch(API_BASE + '/tags')
@@ -789,7 +789,7 @@ export default function ConfigPage({
     }
   };
 
-  const fetchSitePosts = async (slugValue) => {
+  const fetchSitePosts = React.useCallback(async (slugValue) => {
     const slug = slugValue || siteConfig.slug;
     if (!slug) return;
     setSitePostsLoading(true);
@@ -804,7 +804,7 @@ export default function ConfigPage({
     } finally {
       setSitePostsLoading(false);
     }
-  };
+  }, [siteConfig.slug]);
 
   const saveSiteConfig = async () => {
     setSiteSaving(true);
@@ -3334,7 +3334,7 @@ export default function ConfigPage({
                   <button
                     className="display-open-button secondary"
                     onClick={() => {
-                      const next = (siteConfig.menuLinks || []).filter((_, i) => i != idx);
+                      const next = (siteConfig.menuLinks || []).filter((_, i) => i !== idx);
                       setSiteConfig(prev => ({ ...prev, menuLinks: next }));
                     }}
                     type="button"

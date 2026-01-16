@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './Timeline.css';
 import './TrendsPage.css';
@@ -230,7 +230,7 @@ export default function TrendsPage() {
         setTrendsLoading(false);
         setTrendsRefreshing(false);
       });
-  }, [trendsConfig.enabled]);
+  }, [trendsConfig.enabled, trendsLoading]);
 
   useEffect(() => {
     if (!configLoaded) return;

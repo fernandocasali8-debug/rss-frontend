@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { API_BASE, apiFetch } from './api';
 import './PublicSite.css';
 
@@ -114,7 +114,6 @@ export default function PublicSite({ slug }) {
 
   const featured = items[0];
   const latestList = items.slice(1, 7);
-  const restItems = items.slice(1);
 
   return (
     <div className="public-site" style={styleVars}>

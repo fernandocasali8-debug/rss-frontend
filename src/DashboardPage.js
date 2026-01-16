@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './DashboardPage.css';
 
@@ -212,7 +212,7 @@ export default function DashboardPage() {
   }, [metrics]);
 
   const periodLabel = period === '30d' ? 'Últimos 30 dias' : period === '7d' ? 'Últimos 7 dias' : 'Último dia';
-  const aiPerDay = metrics?.charts?.aiPerDay || [];
+  const aiPerDay = useMemo(() => (metrics?.charts?.aiPerDay || []), [metrics]);
   const aiMax = useMemo(() => {
     if (!aiPerDay.length) return 0;
     return Math.max(...aiPerDay.map(entry => entry.total || 0), 1);

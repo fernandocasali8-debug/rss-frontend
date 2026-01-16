@@ -4,7 +4,6 @@ import './TrendsPage.css';
 import './TrendsEventsPage.css';
 
 const VIEW_KEY = 'rss-polymarket-view';
-const FILTER_KEY = 'rss-polymarket-filter';
 
 function formatDateTime(dateStr) {
   if (!dateStr) return '';
@@ -54,37 +53,6 @@ function translateCategoryLabel(label) {
   return map[raw] || label;
 }
 
-function translateTopicLabel(label) {
-  const words = String(label || '').split(' ');
-  const map = {
-    election: 'eleicao',
-    elections: 'eleicoes',
-    presidential: 'presidencial',
-    president: 'presidente',
-    senate: 'senado',
-    congress: 'congresso',
-    house: 'camara',
-    government: 'governo',
-    war: 'guerra',
-    conflict: 'conflito',
-    inflation: 'inflacao',
-    economy: 'economia',
-    markets: 'mercados',
-    court: 'tribunal',
-    supreme: 'suprema',
-    justice: 'justica',
-    climate: 'clima',
-    energy: 'energia'
-  };
-  const translated = words.map((word) => {
-    const cleaned = word.replace(/[^\w-]/g, '').toLowerCase();
-    const replacement = map[cleaned];
-    if (!replacement) return word;
-    const suffix = word.replace(/[\w-]+/g, replacement);
-    return suffix;
-  });
-  return translated.join(' ');
-}
 
 export default function TrendsEventsPage() {
   const [items, setItems] = useState([]);

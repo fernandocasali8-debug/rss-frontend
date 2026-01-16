@@ -32,13 +32,6 @@ const formatDateTime = (value) => {
 };
 
 const getItemDate = (item) => item.isoDate || item.pubDate || '';
-const getFirstSentence = (text) => {
-  if (!text) return '';
-  const normalized = String(text).replace(/\s+/g, ' ').trim();
-  const match = normalized.match(/^(.*?[.!?])\s/);
-  if (match && match[1]) return match[1];
-  return normalized;
-};
 
 const readCache = (email) => {
   if (!email) return null;
@@ -99,9 +92,6 @@ function PublicWatchSite() {
   const [loading, setLoading] = useState(() => !cachedEntry);
   const [error, setError] = useState('');
   const [hasLoaded, setHasLoaded] = useState(() => Boolean(cachedEntry));
-  const [lastUpdated, setLastUpdated] = useState(() => (
-    cachedEntry?.updatedAt ? new Date(cachedEntry.updatedAt) : null
-  ));
   const [theme, setTheme] = useState('light');
   const [fontScale, setFontScale] = useState(1);
   const [nextRefreshAt, setNextRefreshAt] = useState(() => Date.now() + REFRESH_INTERVAL);
@@ -183,7 +173,6 @@ function PublicWatchSite() {
             return prev;
           });
           setHasLoaded(true);
-          setLastUpdated(new Date());
           hasCacheRef.current = true;
           writeCache(queryEmail, nextData);
           if (initial) setLoading(false);
@@ -225,7 +214,7 @@ function PublicWatchSite() {
     return () => clearInterval(timer);
   }, [nextRefreshAt]);
 
-  const items = data.items || [];
+  const items = useMemo(() => (data.items || []), [data.items]);
   const getFaviconUrl = (url) => {
     if (!url) return '';
     try {

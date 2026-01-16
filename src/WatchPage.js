@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './WatchPage.css';
 import fallbackFavicon from './fallback-favicon.svg';

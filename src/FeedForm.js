@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 
 export default function FeedForm({ onFeedAdded }) {

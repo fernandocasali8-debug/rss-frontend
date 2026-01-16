@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './RssGeneratorPage.css';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -453,7 +453,9 @@ export default function RssGeneratorPage() {
     actionState,
     viewMode,
     addedIds,
-    existingFeedUrls
+    existingFeedUrls,
+    handleDelete,
+    items.length
   ]);
 
   const handleViewMode = (mode) => {

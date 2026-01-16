@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './Timeline.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -114,8 +114,7 @@ export default function Timeline() {
   const [loading, setLoading] = useState(true);
   const [accessRestricted, setAccessRestricted] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [nextRefreshAt, setNextRefreshAt] = useState(Date.now() + REFRESH_MS);
-  const [countdown, setCountdown] = useState(Math.ceil(REFRESH_MS / 1000));
+  const [countdown] = useState(Math.ceil(REFRESH_MS / 1000));
   const [savedItems, setSavedItems] = useState([]);
   const [savingIds, setSavingIds] = useState([]);
   const [query, setQuery] = useState('');
@@ -152,8 +151,7 @@ export default function Timeline() {
   const [manualTags, setManualTags] = useState({});
   const [tagModalItem, setTagModalItem] = useState(null);
   const [tagInput, setTagInput] = useState('');
-  const [siteSlug, setSiteSlug] = useState('');
-  const lastPostRef = useRef(null);
+  const [siteSlug] = useState('');
 
   const getManualTags = React.useCallback((item) => {
     const id = getItemId(item);
@@ -344,7 +342,7 @@ export default function Timeline() {
     }
   }, [applyAutoTagsToDraft, flashMessage, getItemTags]);
 
-  const buildSocialText = (text, tags, useTags, useDetectTags, tagCount, fixedTags, useTruncate) => {
+  const buildSocialText = React.useCallback((text, tags, useTags, useDetectTags, tagCount, fixedTags, useTruncate) => {
     let composed = text || '';
     const autoTags = buildAutoTagList(composed, tags, useTags, useDetectTags, tagCount);
     if (autoTags.length) {
@@ -368,11 +366,11 @@ export default function Timeline() {
       composed = `${composed.slice(0, 277)}...`;
     }
     return composed.trim();
-  };
+  }, []);
 
   const previewText = React.useMemo(
     () => buildSocialText(aiText, aiTags, aiAutoTags, aiAutoDetectTags, aiTagCount, aiFixedTags, aiAutoTruncate),
-    [aiText, aiTags, aiAutoTags, aiAutoDetectTags, aiTagCount, aiFixedTags, aiAutoTruncate]
+    [aiText, aiTags, aiAutoTags, aiAutoDetectTags, aiTagCount, aiFixedTags, aiAutoTruncate, buildSocialText]
   );
 
   useEffect(() => {
@@ -391,7 +389,7 @@ export default function Timeline() {
     if (next !== aiDraft) {
       setAiDraft(next);
     }
-  }, [aiAutoTags, aiAutoDetectTags, aiTagCount, aiModalItem, applyAutoTagsToDraft]);
+  }, [aiAutoTags, aiAutoDetectTags, aiTagCount, aiModalItem, aiDraft, applyAutoTagsToDraft]);
 
   const handleCopyPreview = async () => {
     if (!previewText) return;

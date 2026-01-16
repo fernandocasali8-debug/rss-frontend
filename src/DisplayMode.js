@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './DisplayMode.css';
 
@@ -107,7 +107,7 @@ export default function DisplayMode() {
     return () => clearInterval(timer);
   }, []);
 
-  const buildQueue = (newsItems) => {
+  const buildQueue = useCallback((newsItems) => {
     if (!weatherConfig.enabled || !weatherConfig.cities.length) {
       return newsItems.map(item => ({ type: 'news', data: item, id: getId(item) })).slice(0, config.maxQueue);
     }
@@ -122,9 +122,9 @@ export default function DisplayMode() {
       }
     });
     return result.slice(0, config.maxQueue);
-  };
+  }, [config.maxQueue, weatherConfig.enabled, weatherConfig.cities, weatherConfig.insertEvery]);
 
-  const insertNext = (items) => {
+  const insertNext = useCallback((items) => {
     if (!items.length) return;
     setQueue(prev => {
       const existing = new Set(
@@ -140,9 +140,9 @@ export default function DisplayMode() {
       const next = [...prev.slice(0, idx), ...incoming, ...prev.slice(idx)];
       return next.slice(0, config.maxQueue);
     });
-  };
+  }, [config.maxQueue]);
 
-  const fetchNews = () => {
+  const fetchNews = useCallback(() => {
     apiFetch(`${API_BASE}/aggregate`)
       .then(res => res.json())
       .then(data => {
@@ -172,7 +172,9 @@ export default function DisplayMode() {
       .catch(() => {
         setStatus('Erro ao carregar noticias.');
       });
-  };
+  }, [buildQueue, insertNext, config.maxQueue]);
+
+  const weatherCitiesKey = useMemo(() => weatherConfig.cities.join('|'), [weatherConfig.cities]);
 
   useEffect(() => {
     const saved = localStorage.getItem('rss-display-config');
@@ -201,7 +203,7 @@ export default function DisplayMode() {
     fetchNews();
     const interval = setInterval(fetchNews, config.refreshMs);
     return () => clearInterval(interval);
-  }, [config.refreshMs, config.maxQueue, weatherConfig.enabled, weatherConfig.insertEvery]);
+  }, [fetchNews, config.refreshMs]);
 
   useEffect(() => {
     if (!weatherConfig.enabled || !weatherConfig.cities.length) {
@@ -222,7 +224,7 @@ export default function DisplayMode() {
     fetchWeather();
     const interval = setInterval(fetchWeather, weatherConfig.refreshMs);
     return () => clearInterval(interval);
-  }, [weatherConfig.enabled, weatherConfig.refreshMs, weatherConfig.cities.join('|')]);
+  }, [weatherConfig.enabled, weatherConfig.refreshMs, weatherCitiesKey]);
 
   useEffect(() => {
     if (queue.length <= 1) return undefined;
@@ -253,7 +255,7 @@ export default function DisplayMode() {
           <div
             className="display-card"
             key={`${current.id || current.city || currentIndex}-${currentIndex}`}
-            style={{ ['--display-duration']: `${config.displayMs}ms` }}
+            style={{ '--display-duration': `${config.displayMs}ms` }}
           >
             {current.type === 'weather' ? (
               (() => {
@@ -292,7 +294,7 @@ export default function DisplayMode() {
         )}
       </div>
 
-      <div className="display-ticker" style={{ ['--display-ticker-speed']: `${config.tickerSpeed}s` }}>
+      <div className="display-ticker" style={{ '--display-ticker-speed': `${config.tickerSpeed}s` }}>
         <div className="display-ticker-label">Ticker</div>
         <div className="display-ticker-track">
           <div className="display-ticker-content">
