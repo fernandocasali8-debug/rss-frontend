@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -16,7 +16,6 @@ import RssGeneratorPage from './RssGeneratorPage';
 import WatchPage from './WatchPage';
 import InfluencersPage from './InfluencersPage';
 import AdminApp from './AdminApp';
-import LandingPage from './LandingPage';
 import TeamPage from './TeamPage';
 import PublicSite from './PublicSite';
 import PublicWatchSite from './PublicWatchSite';
@@ -122,138 +121,6 @@ const TrendsPlaceholder = ({ title, subtitle }) => (
   </div>
 );
 
-const BetaTeaser = ({ onLogin }) => {
-  const [liveItem, setLiveItem] = useState(null);
-  const [liveLoading, setLiveLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLive = () => {
-      setLiveLoading(true);
-      apiFetch(`${API_BASE}/public/watch?email=fernandocasali8@gmail.com`)
-        .then((res) => res.json())
-        .then((payload) => {
-          if (!isMounted) return;
-          const items = Array.isArray(payload?.items) ? payload.items : [];
-          const now = Date.now();
-          const cutoff = now - 5 * 60 * 1000;
-          const recent = items.find((item) => {
-            const stamp = new Date(item.isoDate || item.pubDate || '').getTime();
-            return Number.isFinite(stamp) && stamp >= cutoff;
-          });
-          setLiveItem(recent || null);
-          setLiveLoading(false);
-        })
-        .catch(() => {
-          if (!isMounted) return;
-          setLiveItem(null);
-          setLiveLoading(false);
-        });
-    };
-    fetchLive();
-    const timer = setInterval(fetchLive, 5 * 60 * 1000);
-    return () => {
-      isMounted = false;
-      clearInterval(timer);
-    };
-  }, []);
-
-  const getFaviconUrl = (url) => {
-    if (!url) return '';
-    try {
-      const host = new URL(url).hostname;
-      return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
-    } catch (e) {
-      return '';
-    }
-  };
-
-  return (
-    <div className="beta-landing">
-      <div className="beta-hero">
-        <div className="beta-brand">
-          <div className="beta-logo">RN</div>
-          <div>
-            <div className="beta-title">Radar de Not\u00EDcias</div>
-            <div className="beta-subtitle">Beta operacional</div>
-          </div>
-        </div>
-        <div className="beta-copy">
-          <h2>Monitoramento editorial sem ru\u00EDdo</h2>
-          <p>
-            Esta p\u00E1gina mostra uma amostra ao vivo. Entre para ver a linha do tempo
-            completa e salvar not\u00EDcias.
-          </p>
-        </div>
-        <div className="beta-actions">
-          <button type="button" className="beta-cta" onClick={onLogin}>
-            Entrar com Google
-          </button>
-          <a className="beta-cta secondary" href="/noticias">
-            Ver amostra p\u00FAblica
-          </a>
-          <div className="beta-note">Login libera todos os recursos.</div>
-        </div>
-      </div>
-      <div className="beta-grid">
-        <div className="beta-card">
-          <div className="beta-card-title">Alertas em tempo real</div>
-          <div className="beta-card-body">
-            Receba sinais r\u00E1pidos sobre temas cr\u00EDticos e reaja antes do mercado.
-          </div>
-        </div>
-        <div className="beta-card">
-          <div className="beta-card-title">Curadoria inteligente</div>
-          <div className="beta-card-body">
-            Filtros, tags e fontes relevantes com crit\u00E9rio editorial.
-          </div>
-        </div>
-        <div className="beta-card">
-          <div className="beta-card-title">Cole\u00E7\u00E3o de salvos</div>
-          <div className="beta-card-body">
-            Organize not\u00EDcias por tema e compartilhe com o time.
-          </div>
-        </div>
-      </div>
-      <div className="beta-live">
-        <div className="beta-live-card">
-          <div className="beta-live-header">
-            <span>\u00DAltimos 5 minutos</span>
-            <span className="beta-live-pill">Ao vivo</span>
-          </div>
-          {liveLoading && <div className="beta-live-title">Carregando not\u00EDcia recente...</div>}
-          {!liveLoading && !liveItem && (
-            <div className="beta-live-title">Nenhuma not\u00EDcia recente nos \u00DAltimos 5 minutos.</div>
-          )}
-          {!liveLoading && liveItem && (
-            <a className="beta-live-link" href={liveItem.link || '#'} target="_blank" rel="noreferrer">
-              <div className="beta-live-row">
-                {getFaviconUrl(liveItem.link) && (
-                  <img
-                    className="beta-live-favicon"
-                    src={getFaviconUrl(liveItem.link)}
-                    alt=""
-                    onError={(event) => {
-                      event.currentTarget.src = fallbackFavicon;
-                    }}
-                  />
-                )}
-                <div>
-                  <div className="beta-live-title">{liveItem.title || 'Not\u00EDcia recente'}</div>
-                  <div className="beta-live-meta">{liveItem.feedName || 'Fonte'}</div>
-                </div>
-              </div>
-              {liveItem.contentSnippet && (
-                <div className="beta-live-snippet">{liveItem.contentSnippet}</div>
-              )}
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const PendingApproval = ({ onLogout, userEmail }) => (
   <div className="auth-screen">
     <div className="auth-shell">
@@ -297,16 +164,12 @@ const PendingApproval = ({ onLogout, userEmail }) => (
   </div>
 );
 
-function MainApp({ initialPage, betaMode = false }) {
+function MainApp({ initialPage }) {
   const siteMatch = window.location.pathname.startsWith('/site/');
   const siteSlug = siteMatch ? window.location.pathname.replace('/site/', '').split('/')[0] : '';
   const isDisplayMode = new URLSearchParams(window.location.search).get('display') === '1';
-  const isBeta = betaMode
-    || window.location.pathname.startsWith('/beta')
-    || new URLSearchParams(window.location.search).get('beta') === '1';
   const [refreshFeeds, setRefreshFeeds] = useState(false);
-  const resolvedInitialPage = isBeta ? (initialPage || 'home') : (initialPage || 'dashboard');
-  const [page, setPage] = useState(resolvedInitialPage);
+  const [page, setPage] = useState(initialPage || 'dashboard');
   const [timelineKey, setTimelineKey] = useState(0);
   const [theme, setTheme] = useState('light');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -331,7 +194,7 @@ function MainApp({ initialPage, betaMode = false }) {
   const [contextMenuConfig, setContextMenuConfig] = useState(DEFAULT_CONTEXT_MENU);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, card: null });
   const userPlan = authUser?.plan || 'starter';
-  const baseAllowedKeys = isBeta ? ['home', 'saved'] : (PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter);
+  const baseAllowedKeys = PLAN_ACCESS[userPlan] || PLAN_ACCESS.starter;
   const allowedKeys = teamAdminEnabled
     ? baseAllowedKeys
     : baseAllowedKeys.filter((key) => key !== 'team');
@@ -364,7 +227,7 @@ function MainApp({ initialPage, betaMode = false }) {
     if (!allowedKeys.includes(page)) {
       setPage(allowedKeys[0] || 'dashboard');
     }
-  }, [page, userPlan, isBeta, allowedKeys]);
+  }, [page, userPlan, allowedKeys]);
 
   const getFaviconUrl = (url) => {
     if (!url) return '';
@@ -507,7 +370,7 @@ function MainApp({ initialPage, betaMode = false }) {
         setEventsLoading(false);
       })
       .catch(() => {
-        setEventsError('Não foi possível carregar os eventos.');
+        setEventsError('NÃ£o foi possÃ­vel carregar os eventos.');
         setEventsLoading(false);
       });
   }, [showEvents]);
@@ -564,7 +427,7 @@ function MainApp({ initialPage, betaMode = false }) {
     if (rememberMe) {
       params.set('remember', '1');
     }
-    params.set('redirect', isBeta ? '/beta' : '/app');
+    params.set('redirect', '/app');
     window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
   };
 
@@ -588,7 +451,7 @@ function MainApp({ initialPage, betaMode = false }) {
     } finally {
       setAuthUser(null);
       const params = new URLSearchParams();
-      params.set('redirect', isBeta ? '/beta' : '/app');
+      params.set('redirect', '/app');
       window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
     }
   };
@@ -709,10 +572,6 @@ function MainApp({ initialPage, betaMode = false }) {
     return <DisplayMode />;
   }
 
-  if (!authLoading && !authUser && isBeta) {
-    return <BetaTeaser onLogin={handleLogin} />;
-  }
-
   if (!authLoading && authUser && authUser.approved === false) {
     return (
       <PendingApproval
@@ -722,45 +581,10 @@ function MainApp({ initialPage, betaMode = false }) {
     );
   }
 
-  if (!authLoading && !authUser && !isBeta) {
+  if (!authLoading && !authUser) {
     return (
       <div className="auth-screen">
         <div className="auth-shell">
-          <div className="auth-hero">
-            <div className="auth-brand">
-              <div className="auth-logo">RSS</div>
-              <div>
-                <div className="auth-title">Leitor RSS</div>
-                <div className="auth-subtitle">Editorial + IA para monitorar, curar e publicar.</div>
-              </div>
-            </div>
-            <div className="auth-caption">
-              Conecte sua conta para acessar o painel, suas filas e automacoes.
-            </div>
-            <div className="auth-features">
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Curadoria inteligente</strong>
-                  <span>Filtros, tags e alinhamento editorial.</span>
-                </div>
-              </div>
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Fluxo de publicacao</strong>
-                  <span>Revisao, aprovacao e canais.</span>
-                </div>
-              </div>
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Monitoramento em tempo real</strong>
-                  <span>Feeds, alertas e tendencias.</span>
-                </div>
-              </div>
-            </div>
-          </div>
           <div className="auth-card">
             <div className="auth-card-title">Entrar no sistema</div>
             <div className="auth-card-subtitle">Use sua conta Google para autenticar.</div>
@@ -910,19 +734,12 @@ function MainApp({ initialPage, betaMode = false }) {
     { key: 'R', label: 'Atualizar pagina' },
     { key: 'T', label: 'Alternar tema' },
     { key: 'M', label: 'Alternar menu lateral' },
-    ...(isBeta
-      ? [
-          { key: 'L', label: 'Linha do tempo' },
-          { key: 'S', label: 'Salvos' }
-        ]
-      : [
-          { key: 'D', label: 'Dashboard' },
-          { key: 'L', label: 'Linha do tempo' },
-          { key: 'S', label: 'Salvos' },
-          { key: 'I', label: 'Influenciadores' },
-          { key: 'G', label: 'Gerador RSS' },
-          { key: 'E', label: 'Eventos' }
-        ])
+    { key: 'D', label: 'Dashboard' },
+    { key: 'L', label: 'Linha do tempo' },
+    { key: 'S', label: 'Salvos' },
+    { key: 'I', label: 'Influenciadores' },
+    { key: 'G', label: 'Gerador RSS' },
+    { key: 'E', label: 'Eventos' }
   ];
 
   const contextNavigation = routeSections.flatMap((section) => (
@@ -948,11 +765,6 @@ function MainApp({ initialPage, betaMode = false }) {
       />
       <div className={`min-h-screen bg-slate-50 text-slate-900 transition-[padding] duration-200 ${sidebarPadding}`}>
         <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-white/80 backdrop-blur">
-          {isBeta && (
-            <div className="border-b border-amber-200/60 bg-amber-50 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700 md:px-10">
-              BETA - SOMENTE LINHA DO TEMPO E SALVOS
-            </div>
-          )}
           <div className="flex items-center justify-between gap-4 px-6 py-4 md:px-10">
             <div className="flex items-center gap-3">
               <button
@@ -984,10 +796,10 @@ function MainApp({ initialPage, betaMode = false }) {
                 type="button"
                 className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white"
                 onClick={() => window.open('/app?display=1', '_blank', 'noopener,noreferrer')}
-                aria-label="Abrir modo transmissão"
+                aria-label="Abrir modo transmissÃ£o"
               >
                   <MonitorPlay size={18} />
-                  <span className="hidden sm:inline">Modo transmissão</span>
+                  <span className="hidden sm:inline">Modo transmissÃ£o</span>
                 </button>
               <button
                 type="button"
@@ -1005,7 +817,7 @@ function MainApp({ initialPage, betaMode = false }) {
               className={`ticker-bar ${tickerConfig.pauseOnHover ? 'ticker-pause' : ''}`}
               style={{ '--ticker-speed': `${tickerConfig.speed}s` }}
             >
-              <div className="ticker-label">Últimas:</div>
+              <div className="ticker-label">Ãšltimas:</div>
               <div className="ticker-track">
                 <div className="ticker-content">
               {tickerItems.map((item, idx) => (
@@ -1232,25 +1044,7 @@ function App() {
     return <MainApp initialPage="team" />;
   }
   if (pathname.startsWith('/app')) {
-    // NOTE (beta-only): keep /app blocked so production only exposes /beta for testers.
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center">
-          <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">Beta apenas</div>
-          <h1 className="text-3xl font-semibold">Acesso indisponivel</h1>
-          <p className="text-slate-300">Esta versao esta fechada. Use o acesso beta.</p>
-          <a
-            className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950"
-            href="/beta"
-          >
-            Ir para o beta
-          </a>
-        </div>
-      </div>
-    );
-  }
-  if (pathname.startsWith('/beta')) {
-    return <MainApp initialPage="home" betaMode />;
+    return <MainApp initialPage="dashboard" />;
   }
   if (pathname.startsWith('/noticias')) {
     return <PublicWatchSite />;
@@ -1259,7 +1053,7 @@ function App() {
     const slug = pathname.replace('/site/', '').split('/')[0];
     return <PublicSite slug={slug} />;
   }
-  return <LandingPage />;
+  return <MainApp initialPage="dashboard" />;
 }
 
 export default App;
