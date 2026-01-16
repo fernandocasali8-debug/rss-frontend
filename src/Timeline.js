@@ -504,7 +504,6 @@ export default function Timeline() {
           setPosts([]);
           setProgressiveLoading(false);
           setLoading(false);
-          setNextRefreshAt(Date.now() + REFRESH_MS);
           return [];
         }
         setAccessRestricted(false);
@@ -533,14 +532,12 @@ export default function Timeline() {
         setVisibleCount(Math.min(INITIAL_BATCH, data.length));
         setProgressiveLoading(data.length > INITIAL_BATCH);
         setLoading(false);
-        setNextRefreshAt(Date.now() + REFRESH_MS);
       })
       .catch(() => {
         setAccessRestricted(false);
         setPosts([]);
         setProgressiveLoading(false);
         setLoading(false);
-        setNextRefreshAt(Date.now() + REFRESH_MS);
       });
   };
 
