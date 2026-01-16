@@ -11,6 +11,11 @@
   display: none;
 }
 
+.live-root.is-preview .live-panel,
+.live-root.is-preview .live-topbar {
+  display: none;
+}
+
 .live-topbar {
   position: sticky;
   top: 0;
@@ -53,6 +58,12 @@
   gap: 16px;
   padding: 16px 20px;
   flex: 1;
+}
+
+.live-root.is-obs .live-shell,
+.live-root.is-preview .live-shell {
+  grid-template-columns: 1fr;
+  padding: 0;
 }
 
 .live-panel {
@@ -156,7 +167,7 @@
 
 .live-link-row {
   display: grid;
-  grid-template-columns: 90px 1fr auto;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
   gap: 6px;
   align-items: center;
   font-size: 11px;
@@ -356,6 +367,14 @@
   overflow: hidden;
 }
 
+.live-root.is-obs .live-stage,
+.live-root.is-preview .live-stage {
+  border-radius: 0;
+  border: none;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.55), rgba(2, 6, 23, 0.95));
+}
+
 .live-tile {
   position: absolute;
   background: #020617;
@@ -373,6 +392,13 @@
   align-items: center;
   justify-content: space-between;
   color: #e2e8f0;
+}
+
+.live-root.is-obs .live-tile-header,
+.live-root.is-preview .live-tile-header {
+  background: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(6px);
+  font-size: 11px;
 }
 
 .live-video {
@@ -409,6 +435,11 @@
   color: #e2e8f0;
 }
 
+.live-root.is-obs .live-overlay-header,
+.live-root.is-preview .live-overlay-header {
+  background: rgba(2, 6, 23, 0.7);
+}
+
 .live-overlay-media {
   width: 100%;
   height: calc(100% - 28px);
@@ -434,6 +465,19 @@
   padding: 8px 0;
 }
 
+.live-root.is-obs .live-ticker,
+.live-root.is-preview .live-ticker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 10px 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.96));
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 -12px 24px rgba(2, 6, 23, 0.35);
+}
+
 .live-ticker-track {
   display: flex;
   gap: 28px;
@@ -445,6 +489,12 @@
   white-space: nowrap;
   font-size: 13px;
   color: #e2e8f0;
+}
+
+.live-root.is-obs .live-ticker-item,
+.live-root.is-preview .live-ticker-item {
+  font-size: 14px;
+  letter-spacing: 0.02em;
 }
 
 @keyframes liveTicker {

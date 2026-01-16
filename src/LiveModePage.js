@@ -106,8 +106,9 @@ export default function LiveModePage() {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const initialCode = (params.get('code') || '').toUpperCase();
   const obsMode = params.get('obs') === '1';
+  const previewMode = params.get('preview') === '1';
+  const viewOnly = obsMode || previewMode;
   const [authUser, setAuthUser] = useState(null);
-  const [, setAuthLoading] = useState(true);
   const [roomCode, setRoomCode] = useState(initialCode);
   const [roomExpiresAt, setRoomExpiresAt] = useState('');
   const [status, setStatus] = useState('');
@@ -119,7 +120,7 @@ export default function LiveModePage() {
   const [tickerItems, setTickerItems] = useState([]);
   const [tickerSpeed, setTickerSpeed] = useState(35);
   const [tickerEnabled, setTickerEnabled] = useState(true);
-  const [showControls, setShowControls] = useState(!obsMode);
+  const [showControls, setShowControls] = useState(!viewOnly);
   const [shareScreenActive, setShareScreenActive] = useState(false);
   const [muted, setMuted] = useState(false);
   const [layoutPreset, setLayoutPreset] = useState('grid');
@@ -131,6 +132,7 @@ export default function LiveModePage() {
   const [chatInput, setChatInput] = useState('');
   const [recording, setRecording] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+  const [remoteConfig, setRemoteConfig] = useState(null);
 
   const wsRef = useRef(null);
   const clientIdRef = useRef('');
@@ -140,14 +142,81 @@ export default function LiveModePage() {
   const localStreamRef = useRef(null);
   const recorderRef = useRef(null);
   const recordStreamRef = useRef(null);
+  const channelRef = useRef(null);
+  const previewConfigKey = 'live-preview-config';
 
   useEffect(() => {
     apiFetch(API_BASE + '/auth/me')
       .then((res) => res.json())
       .then((data) => setAuthUser(data?.user || null))
-      .catch(() => setAuthUser(null))
-      .finally(() => setAuthLoading(false));
+      .catch(() => setAuthUser(null));
   }, []);
+
+  useEffect(() => {
+    if (!previewMode) return undefined;
+    const applyConfig = (payload) => {
+      if (!payload || typeof payload !== 'object') return;
+      setRemoteConfig(payload);
+    };
+    try {
+      const stored = localStorage.getItem(previewConfigKey);
+      if (stored) {
+        applyConfig(JSON.parse(stored));
+      }
+    } catch (e) {
+      // ignore
+    }
+    const handleStorage = (event) => {
+      if (event.key === previewConfigKey && event.newValue) {
+        try {
+          applyConfig(JSON.parse(event.newValue));
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('live-preview');
+      channel.onmessage = (event) => applyConfig(event.data);
+      channelRef.current = channel;
+    }
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      if (channelRef.current) {
+        channelRef.current.close();
+        channelRef.current = null;
+      }
+    };
+  }, [previewMode]);
+
+  useEffect(() => {
+    if (previewMode) return;
+    const payload = {
+      layoutPreset,
+      tiles,
+      overlayTiles,
+      overlays: overlays.map((item) => ({
+        ...item,
+        src: item.objectUrl ? '' : item.src,
+        objectUrl: item.objectUrl ? true : false
+      })),
+      tickerEnabled,
+      tickerSpeed
+    };
+    try {
+      localStorage.setItem(previewConfigKey, JSON.stringify(payload));
+    } catch (e) {
+      // ignore
+    }
+    if (channelRef.current) {
+      channelRef.current.postMessage(payload);
+    } else if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('live-preview');
+      channel.postMessage(payload);
+      channel.close();
+    }
+  }, [previewMode, layoutPreset, tiles, overlayTiles, overlays, tickerEnabled, tickerSpeed]);
 
   useEffect(() => {
     if (!tickerEnabled) return;
@@ -174,6 +243,10 @@ export default function LiveModePage() {
 
   useEffect(() => {
     const bounds = containerRef.current?.getBoundingClientRect();
+    if (previewMode && remoteConfig?.tiles) {
+      setTiles(remoteConfig.tiles);
+      return;
+    }
     const ids = ['local', ...Object.keys(remoteStreams)];
     setTiles((prev) => {
       if (layoutPreset === 'manual') {
@@ -185,10 +258,14 @@ export default function LiveModePage() {
       }
       return buildLiveLayout(layoutPreset, ids, bounds);
     });
-  }, [remoteStreams, localStream, layoutPreset]);
+  }, [remoteStreams, localStream, layoutPreset, previewMode, remoteConfig]);
 
   useEffect(() => {
     const bounds = containerRef.current?.getBoundingClientRect();
+    if (previewMode && remoteConfig?.overlayTiles) {
+      setOverlayTiles(remoteConfig.overlayTiles);
+      return;
+    }
     setOverlayTiles((prev) => {
       let next = { ...prev };
       overlays.forEach((overlay, index) => {
@@ -197,7 +274,19 @@ export default function LiveModePage() {
       });
       return next;
     });
-  }, [overlays]);
+  }, [overlays, previewMode, remoteConfig]);
+
+  useEffect(() => {
+    if (!previewMode || !remoteConfig) return;
+    const nextOverlays = Array.isArray(remoteConfig.overlays) ? remoteConfig.overlays : [];
+    setOverlays(nextOverlays.filter((item) => item && !item.objectUrl && item.src));
+    if (typeof remoteConfig.tickerEnabled === 'boolean') {
+      setTickerEnabled(remoteConfig.tickerEnabled);
+    }
+    if (typeof remoteConfig.tickerSpeed === 'number') {
+      setTickerSpeed(remoteConfig.tickerSpeed);
+    }
+  }, [previewMode, remoteConfig]);
 
   const updateTile = (id, patch) => {
     setTiles((prev) => ({ ...prev, [id]: { ...(prev[id] || DEFAULT_TILE), ...patch } }));
@@ -330,7 +419,7 @@ export default function LiveModePage() {
         setPeers(payload.peers || []);
         if (role === 'host') {
           (payload.peers || []).forEach((peer) => {
-            if (peer.role !== 'guest') return;
+            if (peer.role === 'host') return;
             createPeerConnection(peer.id, true);
           });
         } else {
@@ -346,7 +435,7 @@ export default function LiveModePage() {
           ...prev,
           { id: `${payload.id}-${Date.now()}`, text: `${payload.name || 'Convidado'} entrou.`, system: true }
         ]);
-        if (role === 'host' && payload.role === 'guest') {
+        if (role === 'host' && payload.role !== 'host') {
           createPeerConnection(payload.id, true);
         }
       }
@@ -411,13 +500,16 @@ export default function LiveModePage() {
 
   const createPeerConnection = async (peerId, isInitiator) => {
     if (peersRef.current.has(peerId)) return;
-    if (!localStreamRef.current) {
+    if (!localStreamRef.current && !viewOnly) {
       await startCamera();
     }
     const pc = new RTCPeerConnection({ iceServers: STUN_SERVERS });
     peersRef.current.set(peerId, pc);
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => pc.addTrack(track, localStreamRef.current));
+    } else {
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
     }
     pc.onicecandidate = (event) => {
       if (event.candidate) {
@@ -443,6 +535,9 @@ export default function LiveModePage() {
       peersRef.current.set(peerId, pc);
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => pc.addTrack(track, localStreamRef.current));
+      } else {
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        pc.addTransceiver('audio', { direction: 'recvonly' });
       }
       pc.onicecandidate = (event) => {
         if (event.candidate) {
@@ -592,19 +687,25 @@ export default function LiveModePage() {
   };
 
   const allTiles = useMemo(() => {
-    const list = [{ id: 'local', label: userName || 'Voce', stream: localStream }];
+    const list = [];
+    if (!viewOnly) {
+      list.push({ id: 'local', label: userName || 'Voce', stream: localStream });
+    }
     Object.entries(remoteStreams).forEach(([id, stream]) => {
       const peer = peers.find((p) => p.id === id);
       list.push({ id, label: peer?.name || 'Convidado', stream });
     });
     return list;
-  }, [localStream, remoteStreams, peers, userName]);
+  }, [localStream, remoteStreams, peers, userName, viewOnly]);
 
   const liveUrl = useMemo(() => (
     roomCode ? `${window.location.origin}/live?code=${roomCode}` : ''
   ), [roomCode]);
   const obsUrl = useMemo(() => (
     roomCode ? `${window.location.origin}/live?code=${roomCode}&obs=1` : ''
+  ), [roomCode]);
+  const previewUrl = useMemo(() => (
+    roomCode ? `${window.location.origin}/live?code=${roomCode}&preview=1` : ''
   ), [roomCode]);
 
   const handleCopy = async (value) => {
@@ -619,9 +720,15 @@ export default function LiveModePage() {
     }
   };
 
+  useEffect(() => {
+    if (!viewOnly || !roomCode) return;
+    if (wsRef.current) return;
+    connectSocket(roomCode, 'viewer');
+  }, [viewOnly, roomCode]);
+
   return (
     <div
-      className={`live-root ${obsMode ? 'is-obs' : ''}`}
+      className={`live-root ${obsMode ? 'is-obs' : ''} ${previewMode ? 'is-preview' : ''}`}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
@@ -645,7 +752,7 @@ export default function LiveModePage() {
       )}
 
       <div className="live-shell">
-        {!obsMode && (
+        {!viewOnly && (
           <aside className="live-panel">
             <h2>Modo Live</h2>
             <p>Crie uma sala (host) ou entre com o codigo (convidado).</p>
@@ -677,6 +784,14 @@ export default function LiveModePage() {
                     <span className="live-link-value">{obsUrl}</span>
                     <button type="button" onClick={() => handleCopy(obsUrl)}>Copiar</button>
                   </div>
+                  <div className="live-link-row">
+                    <span className="live-link-label">Preview</span>
+                    <span className="live-link-value">{previewUrl}</span>
+                    <button type="button" onClick={() => handleCopy(previewUrl)}>Copiar</button>
+                  </div>
+                  <button type="button" className="secondary" onClick={() => window.open(previewUrl, '_blank')}>
+                    Abrir preview
+                  </button>
                 </div>
               )}
             </div>
@@ -823,9 +938,15 @@ export default function LiveModePage() {
                 height: tiles[tile.id]?.h ?? DEFAULT_TILE.h
               }}
             >
-              <div className="live-tile-header" onPointerDown={(e) => handlePointerDown(e, tile.id, 'drag')}>
-                <span>{tile.label}</span>
-              </div>
+              {viewOnly ? (
+                <div className="live-tile-header">
+                  <span>{tile.label}</span>
+                </div>
+              ) : (
+                <div className="live-tile-header" onPointerDown={(e) => handlePointerDown(e, tile.id, 'drag')}>
+                  <span>{tile.label}</span>
+                </div>
+              )}
               <video
                 className="live-video"
                 autoPlay
@@ -837,7 +958,9 @@ export default function LiveModePage() {
                   }
                 }}
               />
-              <div className="live-tile-resize" onPointerDown={(e) => handlePointerDown(e, tile.id, 'resize')} />
+              {!viewOnly && (
+                <div className="live-tile-resize" onPointerDown={(e) => handlePointerDown(e, tile.id, 'resize')} />
+              )}
             </div>
           ))}
           {overlays.map((overlay) => (
@@ -851,21 +974,29 @@ export default function LiveModePage() {
                 height: overlayTiles[overlay.id]?.h ?? DEFAULT_TILE.h
               }}
             >
-              <div
-                className="live-overlay-header"
-                onPointerDown={(e) => handlePointerDown(e, overlay.id, 'drag', 'overlay')}
-              >
-                <span>{overlay.type === 'video' ? 'Video' : 'Imagem'}</span>
-              </div>
+              {viewOnly ? (
+                <div className="live-overlay-header">
+                  <span>{overlay.type === 'video' ? 'Video' : 'Imagem'}</span>
+                </div>
+              ) : (
+                <div
+                  className="live-overlay-header"
+                  onPointerDown={(e) => handlePointerDown(e, overlay.id, 'drag', 'overlay')}
+                >
+                  <span>{overlay.type === 'video' ? 'Video' : 'Imagem'}</span>
+                </div>
+              )}
               {overlay.type === 'video' ? (
                 <video className="live-overlay-media" src={overlay.src} autoPlay loop muted />
               ) : (
                 <img className="live-overlay-media" src={overlay.src} alt="" />
               )}
-              <div
-                className="live-overlay-resize"
-                onPointerDown={(e) => handlePointerDown(e, overlay.id, 'resize', 'overlay')}
-              />
+              {!viewOnly && (
+                <div
+                  className="live-overlay-resize"
+                  onPointerDown={(e) => handlePointerDown(e, overlay.id, 'resize', 'overlay')}
+                />
+              )}
             </div>
           ))}
         </div>
