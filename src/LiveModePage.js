@@ -123,6 +123,10 @@ export default function LiveModePage() {
   const [shareScreenActive, setShareScreenActive] = useState(false);
   const [muted, setMuted] = useState(false);
   const [layoutPreset, setLayoutPreset] = useState('grid');
+  const [overlays, setOverlays] = useState([]);
+  const [overlayTiles, setOverlayTiles] = useState({});
+  const [overlayInput, setOverlayInput] = useState('');
+  const [overlayType, setOverlayType] = useState('image');
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [recording, setRecording] = useState(false);
@@ -183,11 +187,27 @@ export default function LiveModePage() {
     });
   }, [remoteStreams, localStream, layoutPreset]);
 
+  useEffect(() => {
+    const bounds = containerRef.current?.getBoundingClientRect();
+    setOverlayTiles((prev) => {
+      let next = { ...prev };
+      overlays.forEach((overlay, index) => {
+        if (next[overlay.id]) return;
+        next = ensureTile(next, overlay.id, index + 6, bounds);
+      });
+      return next;
+    });
+  }, [overlays]);
+
   const updateTile = (id, patch) => {
     setTiles((prev) => ({ ...prev, [id]: { ...(prev[id] || DEFAULT_TILE), ...patch } }));
   };
 
-  const handlePointerDown = (event, id, modeType) => {
+  const updateOverlayTile = (id, patch) => {
+    setOverlayTiles((prev) => ({ ...prev, [id]: { ...(prev[id] || DEFAULT_TILE), ...patch } }));
+  };
+
+  const handlePointerDown = (event, id, modeType, group = 'video') => {
     if (layoutPreset !== 'manual') {
       setLayoutPreset('manual');
     }
@@ -195,17 +215,19 @@ export default function LiveModePage() {
       dragRef.current = {
         id,
         mode: 'resize',
+        group,
         startX: event.clientX,
         startY: event.clientY,
-        start: tiles[id] || DEFAULT_TILE
+        start: (group === 'overlay' ? overlayTiles[id] : tiles[id]) || DEFAULT_TILE
       };
     } else {
       dragRef.current = {
         id,
         mode: 'drag',
+        group,
         startX: event.clientX,
         startY: event.clientY,
-        start: tiles[id] || DEFAULT_TILE
+        start: (group === 'overlay' ? overlayTiles[id] : tiles[id]) || DEFAULT_TILE
       };
     }
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -216,10 +238,11 @@ export default function LiveModePage() {
     if (!drag) return;
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
+    const updater = drag.group === 'overlay' ? updateOverlayTile : updateTile;
     if (drag.mode === 'drag') {
-      updateTile(drag.id, { x: drag.start.x + dx, y: drag.start.y + dy });
+      updater(drag.id, { x: drag.start.x + dx, y: drag.start.y + dy });
     } else {
-      updateTile(drag.id, {
+      updater(drag.id, {
         w: Math.max(180, drag.start.w + dx),
         h: Math.max(120, drag.start.h + dy)
       });
@@ -529,6 +552,45 @@ export default function LiveModePage() {
     recorderRef.current = null;
   };
 
+  const handleAddOverlay = () => {
+    const value = overlayInput.trim();
+    if (!value) return;
+    const id = `overlay-${Date.now()}`;
+    setOverlays((prev) => [
+      ...prev,
+      { id, type: overlayType, src: value, name: value }
+    ]);
+    setOverlayInput('');
+  };
+
+  const handleUploadOverlay = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const id = `overlay-${Date.now()}`;
+    const objectUrl = URL.createObjectURL(file);
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    setOverlays((prev) => [
+      ...prev,
+      { id, type, src: objectUrl, name: file.name, objectUrl: true }
+    ]);
+    event.target.value = '';
+  };
+
+  const handleRemoveOverlay = (id) => {
+    setOverlays((prev) => {
+      const item = prev.find((entry) => entry.id === id);
+      if (item?.objectUrl) {
+        URL.revokeObjectURL(item.src);
+      }
+      return prev.filter((entry) => entry.id !== id);
+    });
+    setOverlayTiles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
   const allTiles = useMemo(() => {
     const list = [{ id: 'local', label: userName || 'Voce', stream: localStream }];
     Object.entries(remoteStreams).forEach(([id, stream]) => {
@@ -673,6 +735,35 @@ export default function LiveModePage() {
                 </button>
               </div>
             </div>
+            <div className="live-overlay-controls">
+              <label>Midias na tela</label>
+              <div className="live-overlay-row">
+                <select value={overlayType} onChange={(e) => setOverlayType(e.target.value)}>
+                  <option value="image">Imagem</option>
+                  <option value="video">Video</option>
+                </select>
+                <input
+                  value={overlayInput}
+                  onChange={(e) => setOverlayInput(e.target.value)}
+                  placeholder="URL da midia"
+                />
+                <button type="button" onClick={handleAddOverlay}>Adicionar</button>
+              </div>
+              <div className="live-overlay-upload">
+                <input type="file" accept="image/*,video/*" onChange={handleUploadOverlay} />
+              </div>
+              <div className="live-overlay-list">
+                {overlays.map((item) => (
+                  <div key={item.id} className="live-overlay-item">
+                    <span>{item.name}</span>
+                    <button type="button" onClick={() => handleRemoveOverlay(item.id)}>Remover</button>
+                  </div>
+                ))}
+                {overlays.length === 0 && (
+                  <div className="live-overlay-empty">Nenhuma midia adicionada.</div>
+                )}
+              </div>
+            </div>
             <div className="live-ticker-controls">
               <label>Velocidade do ticker</label>
               <input
@@ -747,6 +838,34 @@ export default function LiveModePage() {
                 }}
               />
               <div className="live-tile-resize" onPointerDown={(e) => handlePointerDown(e, tile.id, 'resize')} />
+            </div>
+          ))}
+          {overlays.map((overlay) => (
+            <div
+              key={overlay.id}
+              className="live-overlay"
+              style={{
+                left: overlayTiles[overlay.id]?.x ?? DEFAULT_TILE.x,
+                top: overlayTiles[overlay.id]?.y ?? DEFAULT_TILE.y,
+                width: overlayTiles[overlay.id]?.w ?? DEFAULT_TILE.w,
+                height: overlayTiles[overlay.id]?.h ?? DEFAULT_TILE.h
+              }}
+            >
+              <div
+                className="live-overlay-header"
+                onPointerDown={(e) => handlePointerDown(e, overlay.id, 'drag', 'overlay')}
+              >
+                <span>{overlay.type === 'video' ? 'Video' : 'Imagem'}</span>
+              </div>
+              {overlay.type === 'video' ? (
+                <video className="live-overlay-media" src={overlay.src} autoPlay loop muted />
+              ) : (
+                <img className="live-overlay-media" src={overlay.src} alt="" />
+              )}
+              <div
+                className="live-overlay-resize"
+                onPointerDown={(e) => handlePointerDown(e, overlay.id, 'resize', 'overlay')}
+              />
             </div>
           ))}
         </div>
