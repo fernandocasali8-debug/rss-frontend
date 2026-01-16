@@ -501,6 +501,7 @@ function AdminUsersPage({
   onSave,
   onDelete
 }) {
+  const pendingUsers = users.filter((user) => user.approved !== true);
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -553,6 +554,99 @@ function AdminUsersPage({
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Usuarios aguardando liberacao</h2>
+        <p className="mt-1 text-sm text-slate-500">Libere o acesso completo apos definir plano e role.</p>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Nome</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Plano</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3 text-right">Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingUsers.map((user) => {
+                const draft = edits[user.id] || {};
+                return (
+                  <tr key={user.id} className="border-t border-slate-200">
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-1 text-sm"
+                        value={draft.name ?? user.name ?? ''}
+                        onChange={(event) => onEditChange(user.id, 'name', event.target.value)}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="email"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-1 text-sm"
+                        value={draft.email ?? user.email ?? ''}
+                        onChange={(event) => onEditChange(user.id, 'email', event.target.value)}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        className="rounded-lg border border-slate-200 px-3 py-1 text-sm"
+                        value={draft.plan ?? user.plan ?? 'starter'}
+                        onChange={(event) => onEditChange(user.id, 'plan', event.target.value)}
+                      >
+                        <option value="starter">Starter</option>
+                        <option value="pro">Pro</option>
+                        <option value="business">Business</option>
+                        <option value="enterprise">Enterprise</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        className="rounded-lg border border-slate-200 px-3 py-1 text-sm"
+                        value={draft.role ?? user.role ?? 'viewer'}
+                        onChange={(event) => onEditChange(user.id, 'role', event.target.value)}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          className="rounded-full border border-slate-200 bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                          onClick={() => onSave(user.id, { approved: true, active: true })}
+                          disabled={saving}
+                        >
+                          Liberar
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+                          onClick={() => onSave(user.id, { approved: false, active: true })}
+                          disabled={saving}
+                        >
+                          Manter pendente
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {pendingUsers.length === 0 && (
+                <tr className="border-t border-slate-200">
+                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">
+                    Nenhum usuario aguardando liberacao.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Usuarios cadastrados</h2>
         <p className="mt-1 text-sm text-slate-500">Gerencie roles e status.</p>
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
@@ -566,6 +660,7 @@ function AdminUsersPage({
                 <th className="px-4 py-3">Plano</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Ativo</th>
+                <th className="px-4 py-3">Aprovado</th>
                 <th className="px-4 py-3 text-right">Acoes</th>
               </tr>
             </thead>
@@ -632,6 +727,13 @@ function AdminUsersPage({
                         onChange={(event) => onEditChange(user.id, 'active', event.target.checked)}
                       />
                     </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={(draft.approved ?? user.approved) === true}
+                        onChange={(event) => onEditChange(user.id, 'approved', event.target.checked)}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         <button
@@ -657,14 +759,14 @@ function AdminUsersPage({
               })}
               {!loading && users.length === 0 && (
                 <tr className="border-t border-slate-200">
-                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={9} className="px-4 py-6 text-center text-sm text-slate-500">
                     Nenhum usuario cadastrado.
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr className="border-t border-slate-200">
-                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={9} className="px-4 py-6 text-center text-sm text-slate-500">
                     Carregando usuarios...
                   </td>
                 </tr>
@@ -698,7 +800,8 @@ export default function AdminApp() {
     email: '',
     plan: 'starter',
     role: 'viewer',
-    active: true
+    active: true,
+    approved: true
   });
   const [userEdits, setUserEdits] = useState({});
   const [teams, setTeams] = useState([]);
@@ -932,7 +1035,7 @@ export default function AdminApp() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha ao criar usuario.');
       setUsers((prev) => [data, ...prev]);
-      setNewUser({ name: '', email: '', plan: 'starter', role: 'viewer', active: true });
+      setNewUser({ name: '', email: '', plan: 'starter', role: 'viewer', active: true, approved: true });
       setUsersMessage('Usuario criado com sucesso.');
     } catch (err) {
       setUsersMessage(err.message || 'Falha ao criar usuario.');
@@ -1091,11 +1194,11 @@ export default function AdminApp() {
     }
   };
 
-  const saveUser = async (id) => {
+  const saveUser = async (id, overrides = null) => {
     const current = users.find((user) => user.id === id);
     if (!current) return;
     const draft = userEdits[id] || {};
-    const payload = { ...current, ...draft };
+    const payload = { ...current, ...draft, ...(overrides || {}) };
     setUsersSaving(true);
     setUsersMessage('');
     try {

@@ -254,6 +254,49 @@ const BetaTeaser = ({ onLogin }) => {
   );
 };
 
+const PendingApproval = ({ onLogout, userEmail }) => (
+  <div className="auth-screen">
+    <div className="auth-shell">
+      <div className="auth-hero">
+        <div className="auth-brand">
+          <div className="auth-logo">RSS</div>
+          <div>
+            <div className="auth-title">Aguardando liberacao</div>
+            <div className="auth-subtitle">Seu acesso precisa ser aprovado pelo administrador.</div>
+          </div>
+        </div>
+        <div className="auth-caption">
+          Assim que sua conta for liberada, voce podera acessar o sistema completo.
+        </div>
+        <div className="auth-features">
+          <div className="auth-feature">
+            <span className="auth-feature-dot" />
+            <div>
+              <strong>Conta registrada</strong>
+              <span>{userEmail || 'Email confirmado'}</span>
+            </div>
+          </div>
+          <div className="auth-feature">
+            <span className="auth-feature-dot" />
+            <div>
+              <strong>Status</strong>
+              <span>Em analise pelo administrador.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="auth-card">
+        <div className="auth-card-title">Acesso pendente</div>
+        <div className="auth-card-subtitle">Voce sera avisado quando liberar.</div>
+        <button type="button" className="auth-button" onClick={onLogout}>
+          Sair da conta
+        </button>
+        <div className="auth-card-footer">Se precisar, fale com o administrador.</div>
+      </div>
+    </div>
+  </div>
+);
+
 function MainApp({ initialPage, betaMode = false }) {
   const siteMatch = window.location.pathname.startsWith('/site/');
   const siteSlug = siteMatch ? window.location.pathname.replace('/site/', '').split('/')[0] : '';
@@ -668,6 +711,15 @@ function MainApp({ initialPage, betaMode = false }) {
 
   if (!authLoading && !authUser && isBeta) {
     return <BetaTeaser onLogin={handleLogin} />;
+  }
+
+  if (!authLoading && authUser && authUser.approved === false) {
+    return (
+      <PendingApproval
+        onLogout={handleLogout}
+        userEmail={authUser.email}
+      />
+    );
   }
 
   if (!authLoading && !authUser && !isBeta) {
