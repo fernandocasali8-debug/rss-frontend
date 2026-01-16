@@ -72,7 +72,8 @@ const ROUTE_SECTIONS = [
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { key: 'home', label: 'Linha do tempo', icon: Rss },
       { key: 'saved', label: 'Salvos', icon: Bookmark },
-      { key: 'watch', label: 'Acompanhamentos', icon: Eye }
+      { key: 'watch', label: 'Acompanhamentos', icon: Eye },
+      { key: 'live', label: 'Modo Live', icon: MonitorPlay }
     ]
   },
   {
@@ -99,10 +100,10 @@ const ROUTE_SECTIONS = [
 ];
 
 const PLAN_ACCESS = {
-  starter: ['dashboard', 'home', 'saved'],
-  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers'],
-  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config'],
-  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config']
+  starter: ['dashboard', 'home', 'saved', 'live'],
+  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'live'],
+  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'live'],
+  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'live']
 };
 
 const TrendsPlaceholder = ({ title, subtitle }) => (
@@ -552,6 +553,10 @@ function MainApp({ initialPage }) {
           event.preventDefault();
           openEvents();
           break;
+        case 'v':
+          event.preventDefault();
+          handleSelectPage('live');
+          break;
         default:
           break;
       }
@@ -740,7 +745,8 @@ function MainApp({ initialPage }) {
     { key: 'S', label: 'Salvos' },
     { key: 'I', label: 'Influenciadores' },
     { key: 'G', label: 'Gerador RSS' },
-    { key: 'E', label: 'Eventos' }
+    { key: 'E', label: 'Eventos' },
+    { key: 'V', label: 'Modo Live' }
   ];
 
   const contextNavigation = routeSections.flatMap((section) => (
@@ -877,6 +883,7 @@ function MainApp({ initialPage }) {
           {page === 'team' && <TeamPage />}
           {page === 'rss-generator' && <RssGeneratorPage />}
           {page === 'watch' && <WatchPage />}
+          {page === 'live' && <LiveModePage />}
           {page === 'config' && (
             <ConfigPage
               onFeedAdded={handleFeedAdded}

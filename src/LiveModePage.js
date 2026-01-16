@@ -35,6 +35,73 @@ const ensureTile = (tiles, id, index, bounds) => {
   return next;
 };
 
+const buildLiveLayout = (preset, ids, bounds) => {
+  const width = Math.max(640, Math.floor(bounds?.width || 960));
+  const height = Math.max(360, Math.floor(bounds?.height || 540));
+  const padding = 20;
+  const gap = 12;
+  const next = {};
+  if (!ids.length) return next;
+  if (preset === 'side') {
+    if (ids.length === 1) {
+      next[ids[0]] = { x: padding, y: padding, w: width - padding * 2, h: height - padding * 2 };
+      return next;
+    }
+    const mainId = ids[0];
+    const sideIds = ids.slice(1);
+    const mainWidth = Math.max(320, Math.floor(width * 0.65));
+    next[mainId] = {
+      x: padding,
+      y: padding,
+      w: mainWidth - padding - gap,
+      h: height - padding * 2
+    };
+    const columnX = mainWidth + gap;
+    const columnWidth = width - columnX - padding;
+    const tileHeight = Math.max(120, Math.floor((height - padding * 2 - gap * (sideIds.length - 1)) / sideIds.length));
+    sideIds.forEach((id, index) => {
+      next[id] = {
+        x: columnX,
+        y: padding + index * (tileHeight + gap),
+        w: columnWidth,
+        h: tileHeight
+      };
+    });
+    return next;
+  }
+  if (preset === 'pip') {
+    const mainId = ids[0];
+    const others = ids.slice(1);
+    next[mainId] = { x: padding, y: padding, w: width - padding * 2, h: height - padding * 2 };
+    const pipWidth = Math.min(260, Math.floor(width * 0.28));
+    const pipHeight = Math.min(180, Math.floor(height * 0.25));
+    others.forEach((id, index) => {
+      next[id] = {
+        x: width - pipWidth - padding,
+        y: padding + index * (pipHeight + gap),
+        w: pipWidth,
+        h: pipHeight
+      };
+    });
+    return next;
+  }
+  const cols = Math.ceil(Math.sqrt(ids.length));
+  const rows = Math.ceil(ids.length / cols);
+  const cellWidth = Math.floor((width - padding * 2 - gap * (cols - 1)) / cols);
+  const cellHeight = Math.floor((height - padding * 2 - gap * (rows - 1)) / rows);
+  ids.forEach((id, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    next[id] = {
+      x: padding + col * (cellWidth + gap),
+      y: padding + row * (cellHeight + gap),
+      w: cellWidth,
+      h: cellHeight
+    };
+  });
+  return next;
+};
+
 export default function LiveModePage() {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const initialCode = (params.get('code') || '').toUpperCase();
@@ -55,6 +122,10 @@ export default function LiveModePage() {
   const [showControls, setShowControls] = useState(!obsMode);
   const [shareScreenActive, setShareScreenActive] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [layoutPreset, setLayoutPreset] = useState('grid');
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [recording, setRecording] = useState(false);
 
   const wsRef = useRef(null);
   const clientIdRef = useRef('');
@@ -62,6 +133,8 @@ export default function LiveModePage() {
   const containerRef = useRef(null);
   const dragRef = useRef(null);
   const localStreamRef = useRef(null);
+  const recorderRef = useRef(null);
+  const recordStreamRef = useRef(null);
 
   useEffect(() => {
     apiFetch(API_BASE + '/auth/me')
@@ -96,21 +169,27 @@ export default function LiveModePage() {
 
   useEffect(() => {
     const bounds = containerRef.current?.getBoundingClientRect();
+    const ids = ['local', ...Object.keys(remoteStreams)];
     setTiles((prev) => {
-      let next = { ...prev };
-      next = ensureTile(next, 'local', 0, bounds);
-      Object.keys(remoteStreams).forEach((id, index) => {
-        next = ensureTile(next, id, index + 1, bounds);
-      });
-      return next;
+      if (layoutPreset === 'manual') {
+        let next = { ...prev };
+        ids.forEach((id, index) => {
+          next = ensureTile(next, id, index, bounds);
+        });
+        return next;
+      }
+      return buildLiveLayout(layoutPreset, ids, bounds);
     });
-  }, [remoteStreams]);
+  }, [remoteStreams, localStream, layoutPreset]);
 
   const updateTile = (id, patch) => {
     setTiles((prev) => ({ ...prev, [id]: { ...(prev[id] || DEFAULT_TILE), ...patch } }));
   };
 
   const handlePointerDown = (event, id, modeType) => {
+    if (layoutPreset !== 'manual') {
+      setLayoutPreset('manual');
+    }
     if (modeType === 'resize') {
       dragRef.current = {
         id,
@@ -239,12 +318,20 @@ export default function LiveModePage() {
       }
       if (payload.type === 'peer-joined') {
         setPeers((prev) => [...prev.filter((p) => p.id !== payload.id), payload]);
+        setChatMessages((prev) => [
+          ...prev,
+          { id: `${payload.id}-${Date.now()}`, text: `${payload.name || 'Convidado'} entrou.`, system: true }
+        ]);
         if (role === 'host' && payload.role === 'guest') {
           createPeerConnection(payload.id, true);
         }
       }
       if (payload.type === 'peer-left') {
         setPeers((prev) => prev.filter((p) => p.id !== payload.id));
+        setChatMessages((prev) => [
+          ...prev,
+          { id: `${payload.id}-${Date.now()}`, text: 'Convidado saiu.', system: true }
+        ]);
         const pc = peersRef.current.get(payload.id);
         if (pc) {
           pc.close();
@@ -259,6 +346,16 @@ export default function LiveModePage() {
       if (payload.type === 'signal') {
         await handleSignal(payload.from, payload.data);
       }
+      if (payload.type === 'broadcast' && payload.data?.type === 'chat') {
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: `${payload.from}-${Date.now()}`,
+            text: payload.data.text,
+            name: payload.data.name || 'Convidado'
+          }
+        ]);
+      }
     };
   };
 
@@ -266,6 +363,26 @@ export default function LiveModePage() {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({ type: 'signal', to, data }));
+  };
+
+  const sendChat = () => {
+    if (!chatInput.trim()) return;
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const payload = {
+      type: 'broadcast',
+      data: {
+        type: 'chat',
+        text: chatInput.trim(),
+        name: userName || (authUser?.name || 'Apresentador')
+      }
+    };
+    ws.send(JSON.stringify(payload));
+    setChatMessages((prev) => [
+      ...prev,
+      { id: `self-${Date.now()}`, text: chatInput.trim(), name: 'Voce', self: true }
+    ]);
+    setChatInput('');
   };
 
   const createPeerConnection = async (peerId, isInitiator) => {
@@ -372,6 +489,45 @@ export default function LiveModePage() {
     stopLocalStream();
   };
 
+  const startRecording = async () => {
+    if (recording) return;
+    setStatus('');
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      recordStreamRef.current = stream;
+      const chunks = [];
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `live-${roomCode || 'sessao'}-${Date.now()}.webm`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        stream.getTracks().forEach((track) => track.stop());
+        recordStreamRef.current = null;
+        setRecording(false);
+      };
+      recorder.start(500);
+      setRecording(true);
+    } catch (e) {
+      setStatus('Nao foi possivel iniciar a gravacao.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (!recorderRef.current) return;
+    recorderRef.current.stop();
+    recorderRef.current = null;
+  };
+
   const allTiles = useMemo(() => {
     const list = [{ id: 'local', label: userName || 'Voce', stream: localStream }];
     Object.entries(remoteStreams).forEach(([id, stream]) => {
@@ -394,6 +550,9 @@ export default function LiveModePage() {
             <button type="button" onClick={startCamera}>Camera</button>
             <button type="button" onClick={startScreenShare}>
               {shareScreenActive ? 'Tela ativa' : 'Compartilhar tela'}
+            </button>
+            <button type="button" onClick={recording ? stopRecording : startRecording}>
+              {recording ? 'Parar gravacao' : 'Gravar tela'}
             </button>
             <button type="button" onClick={() => setMuted((prev) => !prev)}>
               {muted ? 'Som ligado' : 'Mutar'}
@@ -426,6 +585,39 @@ export default function LiveModePage() {
               <div>Participantes: {peers.length + (localStream ? 1 : 0)}/{MAX_PEERS}</div>
             </div>
             {status && <div className="live-status">{status}</div>}
+            <div className="live-layout-controls">
+              <label>Layout</label>
+              <div className="live-layout-buttons">
+                <button
+                  type="button"
+                  className={layoutPreset === 'grid' ? 'is-active' : ''}
+                  onClick={() => setLayoutPreset('grid')}
+                >
+                  Grade
+                </button>
+                <button
+                  type="button"
+                  className={layoutPreset === 'side' ? 'is-active' : ''}
+                  onClick={() => setLayoutPreset('side')}
+                >
+                  Lado a lado
+                </button>
+                <button
+                  type="button"
+                  className={layoutPreset === 'pip' ? 'is-active' : ''}
+                  onClick={() => setLayoutPreset('pip')}
+                >
+                  PiP
+                </button>
+                <button
+                  type="button"
+                  className={layoutPreset === 'manual' ? 'is-active' : ''}
+                  onClick={() => setLayoutPreset('manual')}
+                >
+                  Manual
+                </button>
+              </div>
+            </div>
             <div className="live-ticker-controls">
               <label>Velocidade do ticker</label>
               <input
@@ -438,6 +630,37 @@ export default function LiveModePage() {
               <button type="button" onClick={() => setTickerEnabled((prev) => !prev)}>
                 {tickerEnabled ? 'Desligar ticker' : 'Ligar ticker'}
               </button>
+            </div>
+            <div className="live-chat">
+              <label>Chat rapido</label>
+              <div className="live-chat-list">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`live-chat-item${msg.self ? ' is-self' : ''}${msg.system ? ' is-system' : ''}`}
+                  >
+                    {!msg.system && <strong>{msg.name || 'Convidado'}:</strong>}
+                    <span>{msg.text}</span>
+                  </div>
+                ))}
+                {chatMessages.length === 0 && (
+                  <div className="live-chat-empty">Sem mensagens ainda.</div>
+                )}
+              </div>
+              <div className="live-chat-input">
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Enviar mensagem"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      sendChat();
+                    }
+                  }}
+                />
+                <button type="button" onClick={sendChat}>Enviar</button>
+              </div>
             </div>
           </aside>
         )}
