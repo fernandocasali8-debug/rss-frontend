@@ -77,6 +77,8 @@ export default function DashboardPage() {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [tasksStreamStatus, setTasksStreamStatus] = useState('offline');
+  const [systemStatus, setSystemStatus] = useState([]);
+  const [systemStatusLoading, setSystemStatusLoading] = useState(false);
   const hasMetricsRef = useRef(false);
   useEffect(() => {
     const cached = localStorage.getItem('rss-dashboard-cache');
@@ -144,6 +146,20 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const loadSystemStatus = useCallback(async () => {
+    setSystemStatusLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/system/status`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao carregar status.');
+      setSystemStatus(Array.isArray(data.items) ? data.items : []);
+    } catch (err) {
+      setSystemStatus([]);
+    } finally {
+      setSystemStatusLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadMetrics(true);
     const interval = setInterval(loadMetrics, 120000);
@@ -161,6 +177,12 @@ export default function DashboardPage() {
     const interval = setInterval(loadNotifications, 120000);
     return () => clearInterval(interval);
   }, [loadNotifications]);
+
+  useEffect(() => {
+    loadSystemStatus();
+    const interval = setInterval(loadSystemStatus, 180000);
+    return () => clearInterval(interval);
+  }, [loadSystemStatus]);
 
   useEffect(() => {
     const source = new EventSource(`${API_BASE}/stream/tasks`, { withCredentials: true });
@@ -291,6 +313,12 @@ export default function DashboardPage() {
     }
   };
 
+  const formatStatusLabel = (status) => {
+    if (status === 'ok') return 'Ok';
+    if (status === 'off') return 'Desativado';
+    return 'Atencao';
+  };
+
   return (
     <div className="dash-google">
       <div className="dash-header">
@@ -363,6 +391,29 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      <div className="dash-card">
+        <div className="dash-section-title">Status do sistema</div>
+        <div className="dash-subtle">Configuracoes criticas para o funcionamento.</div>
+        {systemStatusLoading && <div className="dash-empty">Carregando status...</div>}
+        {!systemStatusLoading && systemStatus.length === 0 && (
+          <div className="dash-empty">Sem status disponivel.</div>
+        )}
+        {!systemStatusLoading && systemStatus.length > 0 && (
+          <div className="dash-status-grid">
+            {systemStatus.map((item) => (
+              <div key={item.key} className="dash-status-item">
+                <span className={`dash-led ${item.status || 'warn'}`} />
+                <div>
+                  <strong>{item.label}</strong>
+                  <span>{formatStatusLabel(item.status)}</span>
+                </div>
+                <span className="dash-status-detail">{item.detail}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {!tasksLoading && myTasks.length > 0 && (
         <div className="dash-card">
