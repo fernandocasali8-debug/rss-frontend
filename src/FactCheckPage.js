@@ -8,6 +8,16 @@ const SEEN_KEY = 'fact-check-seen';
 const MAX_RECENT = 6;
 const SEEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }).format(date);
+};
+
 export default function FactCheckPage() {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState([]);
@@ -324,9 +334,12 @@ export default function FactCheckPage() {
           {filteredItems.map((claim) => (
             <div key={claim.id} className="fact-check-card">
               <div className="fact-check-claim">{claim.text || 'Alegacao sem texto'}</div>
-              {claim.claimant && (
-                <div className="fact-check-claimant">Atribuicao: {claim.claimant}</div>
-              )}
+              <div className="fact-check-claim-meta">
+                {claim.claimant ? `Atribuicao: ${claim.claimant}` : 'Atribuicao nao informada'}
+                {claim.reviews?.[0]?.reviewDate && (
+                  <span>{` ? ${formatDate(claim.reviews[0].reviewDate)}`}</span>
+                )}
+              </div>
               <button
                 type="button"
                 className={`fact-check-favorite ${isFavorited(claim) ? 'is-active' : ''}`}
@@ -347,6 +360,9 @@ export default function FactCheckPage() {
                     <div className="fact-check-review-meta">
                       <span>{review.publisher}</span>
                       {review.rating && <span className="fact-check-rating">{review.rating}</span>}
+                      {review.reviewDate && (
+                        <span>{formatDate(review.reviewDate)}</span>
+                      )}
                     </div>
                   </a>
                 ))}

@@ -241,7 +241,7 @@
   color: var(--ink);
 }
 
-.fact-check-claimant {
+.fact-check-claim-meta {
   color: var(--muted);
   font-size: 0.85rem;
 }
