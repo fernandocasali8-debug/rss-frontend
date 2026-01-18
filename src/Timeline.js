@@ -145,8 +145,6 @@ export default function Timeline() {
   const [youtubeVideos, setYoutubeVideos] = useState([]);
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [youtubeError, setYoutubeError] = useState('');
-  const [expandedClips, setExpandedClips] = useState({});
-  const [clipCache, setClipCache] = useState({});
   const [actionMessage, setActionMessage] = useState('');
   const [readIds, setReadIds] = useState([]);
   const [hiddenFeeds, setHiddenFeeds] = useState([]);
@@ -243,51 +241,6 @@ export default function Timeline() {
       setYoutubeLoading(false);
     }
   }, []);
-
-  const getClipState = React.useCallback((id) => (
-    clipCache[id] || { items: [], loading: false, error: '' }
-  ), [clipCache]);
-
-  const getSocialLevel = React.useCallback((itemTags, sources) => {
-    const score = (itemTags?.length || 0) + (sources?.length || 0);
-    if (score >= 6) return 'Alto';
-    if (score >= 3) return 'Medio';
-    return 'Baixo';
-  }, []);
-
-  const getVolumeIndicator = React.useCallback((item) => {
-    const date = new Date(item.pubDate || item.isoDate || '');
-    if (Number.isNaN(date.getTime())) return '→';
-    const diffMinutes = Math.max(0, (Date.now() - date.getTime()) / 60000);
-    if (diffMinutes <= 120) return '↑';
-    if (diffMinutes <= 360) return '→';
-    return '↓';
-  }, []);
-
-  const handleToggleClips = React.useCallback(async (item) => {
-    if (!item) return;
-    const id = getItemId(item);
-    if (!id) return;
-    setExpandedClips((prev) => ({ ...prev, [id]: !prev[id] }));
-    const cached = clipCache[id];
-    if (cached?.items?.length || cached?.loading) return;
-    setClipCache((prev) => ({ ...prev, [id]: { items: [], loading: true, error: '' } }));
-    try {
-      const query = encodeURIComponent(item.title || '');
-      const res = await apiFetch(`${API_BASE}/youtube/search?query=${query}`);
-      const data = await res.json();
-      if (!res.ok || data.ok === false) {
-        throw new Error(data.message || 'Falha ao buscar clipes.');
-      }
-      const items = Array.isArray(data.items) ? data.items.slice(0, 3) : [];
-      setClipCache((prev) => ({ ...prev, [id]: { items, loading: false, error: '' } }));
-    } catch (err) {
-      setClipCache((prev) => ({
-        ...prev,
-        [id]: { items: [], loading: false, error: err.message || 'Falha ao buscar clipes.' }
-      }));
-    }
-  }, [clipCache]);
 
   const buildAutoTagList = (text, tags, useTags, useDetectTags, tagCount) => {
     const baseText = text || '';
@@ -875,11 +828,6 @@ export default function Timeline() {
     visiblePosts.map((item, idx) => {
       const itemTags = getItemTags(item);
       const favicon = getFaviconUrl(item.feedUrl || item.link);
-      const itemId = getItemId(item);
-      const clipState = getClipState(itemId);
-      const socialLevel = getSocialLevel(itemTags, item.sources);
-      const volumeIndicator = getVolumeIndicator(item);
-      const clipTags = itemTags.slice(0, 3).map((tag) => `#${String(tag).replace(/\\s+/g, '')}`);
       return (
         <div
           className={`timeline-post ${isRead(item) ? 'is-read' : ''}`}
@@ -931,62 +879,6 @@ export default function Timeline() {
                 ))}
               </div>
             )}
-            <div className="timeline-clips">
-              <button
-                type="button"
-                className="timeline-clips-toggle"
-                onClick={() => handleToggleClips(item)}
-                aria-expanded={!!expandedClips[itemId]}
-              >
-                {expandedClips[itemId] ? 'Ocultar clipes' : 'Clipes relacionados'}
-              </button>
-              {expandedClips[itemId] && (
-                <div className="timeline-clips-body">
-                  <div className="timeline-clips-summary">
-                    <span className={`timeline-clips-level is-${socialLevel.toLowerCase()}`}>
-                      Picos nas redes: {socialLevel}
-                    </span>
-                    <span className="timeline-clips-volume">Volume recente: {volumeIndicator}</span>
-                    {clipTags.length > 0 && (
-                      <span className="timeline-clips-tags">{clipTags.join(' ')}</span>
-                    )}
-                  </div>
-                  {clipState.loading && <div className="timeline-clips-status">Carregando clipes...</div>}
-                  {!clipState.loading && clipState.error && (
-                    <div className="timeline-clips-status is-error">{clipState.error}</div>
-                  )}
-                  {!clipState.loading && !clipState.error && clipState.items.length === 0 && (
-                    <div className="timeline-clips-status">Nenhum clipe encontrado.</div>
-                  )}
-                  {clipState.items.length > 0 && (
-                    <div className="timeline-clips-grid">
-                      {clipState.items.map((clip) => (
-                        <a
-                          key={clip.id}
-                          className="timeline-clips-item"
-                          href={clip.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {clip.thumbnail && (
-                            <img src={clip.thumbnail} alt={clip.title} />
-                          )}
-                          <div className="timeline-clips-title">{clip.title}</div>
-                          <div className="timeline-clips-source">{clip.channelTitle || 'YouTube'}</div>
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="timeline-clips-more"
-                    onClick={() => openYoutubeModal(item)}
-                  >
-                    Ver mais no YouTube
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
           <div className="timeline-post-actions">
             <div className="timeline-action-group">
@@ -1058,8 +950,7 @@ export default function Timeline() {
               >
                 <span className="timeline-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
-                    <rect x="3" y="6" width="18" height="12" rx="2" />
-                    <polygon points="10 9 16 12 10 15" />
+                    <path d="M23 7l-5 3v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2l5 3z" />
                   </svg>
                 </span>
                 <span className="visually-hidden">Videos</span>
@@ -1146,12 +1037,7 @@ export default function Timeline() {
     handlePostToSite,
     handleToggleRead,
     handleHideFeed,
-    openTagModal,
-    expandedClips,
-    getClipState,
-    getSocialLevel,
-    getVolumeIndicator,
-    handleToggleClips
+    openTagModal
   ]);
 
     if (loading) return <div className="timeline-loading">Carregando noticias...</div>;
