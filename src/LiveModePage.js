@@ -384,7 +384,7 @@ export default function LiveModePage() {
     }
   };
 
-  const connectSocket = (code, role) => {
+  const connectSocket = React.useCallback((code, role) => {
     const wsUrl = new URL(buildWsUrl('/live/ws'));
     wsUrl.searchParams.set('code', code);
     wsUrl.searchParams.set('role', role);
@@ -470,7 +470,7 @@ export default function LiveModePage() {
         ]);
       }
     };
-  };
+  }, [userName]);
 
   const sendSignal = (to, data) => {
     const ws = wsRef.current;
