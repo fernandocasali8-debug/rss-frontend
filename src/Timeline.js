@@ -145,6 +145,10 @@ export default function Timeline() {
   const [youtubeVideos, setYoutubeVideos] = useState([]);
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [youtubeError, setYoutubeError] = useState('');
+  const [factModalItem, setFactModalItem] = useState(null);
+  const [factClaims, setFactClaims] = useState([]);
+  const [factLoading, setFactLoading] = useState(false);
+  const [factError, setFactError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [readIds, setReadIds] = useState([]);
   const [hiddenFeeds, setHiddenFeeds] = useState([]);
@@ -167,9 +171,34 @@ export default function Timeline() {
     setTimeout(() => setActionMessage(''), 2500);
   }, []);
 
-  const handleFactCheck = React.useCallback(() => {
-    flashMessage('Checagem em breve.');
-  }, [flashMessage]);
+  const closeFactModal = () => {
+    setFactModalItem(null);
+    setFactClaims([]);
+    setFactLoading(false);
+    setFactError('');
+  };
+
+  const openFactModal = React.useCallback(async (item) => {
+    if (!item) return;
+    setFactModalItem(item);
+    setFactClaims([]);
+    setFactError('');
+    setFactLoading(true);
+    try {
+      const query = encodeURIComponent(item.title || '');
+      const res = await apiFetch(`${API_BASE}/factcheck/search?query=${query}`);
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.message || 'Falha ao buscar checagem.');
+      }
+      setFactClaims(Array.isArray(data.items) ? data.items : []);
+    } catch (err) {
+      setFactError(err.message || 'Falha ao buscar checagem.');
+      setFactClaims([]);
+    } finally {
+      setFactLoading(false);
+    }
+  }, []);
 
   const isSaved = React.useCallback((item) => {
     const id = getItemId(item);
@@ -949,7 +978,7 @@ export default function Timeline() {
               </button>
               <button
                 className="timeline-action icon-only"
-                onClick={handleFactCheck}
+                onClick={() => openFactModal(item)}
                 title="Checagem"
               >
                 <span className="timeline-icon" aria-hidden="true">
@@ -1050,7 +1079,7 @@ export default function Timeline() {
     handleOpenSource,
     handleCopyLink,
     handleShare,
-    handleFactCheck,
+    openFactModal,
     openYoutubeModal,
     handlePostToSite,
     handleToggleRead,
@@ -1556,6 +1585,63 @@ export default function Timeline() {
             </div>
             <div className="event-modal-footer">
               <button className="event-refresh" onClick={closeYoutubeModal}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {factModalItem && (
+        <div className="event-overlay" role="dialog" aria-modal="true">
+          <div className="event-modal">
+            <div className="event-modal-header">
+              <h3>Checagem</h3>
+              <button className="event-close" onClick={closeFactModal} aria-label="Fechar">
+                x
+              </button>
+            </div>
+            <div className="event-modal-body">
+              <div className="timeline-ai-meta">
+                <div className="timeline-ai-source">{factModalItem.feedName}</div>
+                <div className="timeline-ai-title">{factModalItem.title}</div>
+              </div>
+              {factLoading && <div className="timeline-ai-loading">Buscando checagens...</div>}
+              {factError && <div className="timeline-ai-error">{factError}</div>}
+              {!factLoading && !factError && factClaims.length === 0 && (
+                <div className="timeline-ai-loading">Nenhuma checagem encontrada.</div>
+              )}
+              {factClaims.length > 0 && (
+                <div className="timeline-fact-list">
+                  {factClaims.map((claim) => (
+                    <div key={claim.id} className="timeline-fact-item">
+                      <div className="timeline-fact-claim">{claim.text}</div>
+                      {claim.claimant && (
+                        <div className="timeline-fact-claimant">Atribuicao: {claim.claimant}</div>
+                      )}
+                      <div className="timeline-fact-reviews">
+                        {claim.reviews.map((review, idx) => (
+                          <a
+                            key={`${claim.id}-${idx}`}
+                            className="timeline-fact-review"
+                            href={review.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <div className="timeline-fact-review-title">{review.title || 'Checagem'}</div>
+                            <div className="timeline-fact-review-meta">
+                              <span>{review.publisher}</span>
+                              {review.rating && <span>{review.rating}</span>}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="event-modal-footer">
+              <button className="event-refresh" onClick={closeFactModal}>
                 Fechar
               </button>
             </div>
