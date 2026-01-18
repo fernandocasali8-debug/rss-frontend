@@ -392,7 +392,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="dash-card">
+      <div className="dash-card dash-status-card">
         <div className="dash-section-title">Status do sistema</div>
         <div className="dash-subtle">Configuracoes criticas para o funcionamento.</div>
         {systemStatusLoading && <div className="dash-empty">Carregando status...</div>}
