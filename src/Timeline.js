@@ -167,6 +167,10 @@ export default function Timeline() {
     setTimeout(() => setActionMessage(''), 2500);
   }, []);
 
+  const handleFactCheck = React.useCallback(() => {
+    flashMessage('Checagem em breve.');
+  }, [flashMessage]);
+
   const isSaved = React.useCallback((item) => {
     const id = getItemId(item);
     return savedItems.some(saved => saved.id === id);
@@ -945,6 +949,19 @@ export default function Timeline() {
               </button>
               <button
                 className="timeline-action icon-only"
+                onClick={handleFactCheck}
+                title="Checagem"
+              >
+                <span className="timeline-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7" />
+                    <line x1="16.65" y1="16.65" x2="21" y2="21" />
+                  </svg>
+                </span>
+                <span className="visually-hidden">Checagem</span>
+              </button>
+              <button
+                className="timeline-action icon-only"
                 onClick={() => openYoutubeModal(item)}
                 title="Videos relacionados"
               >
@@ -1033,6 +1050,7 @@ export default function Timeline() {
     handleOpenSource,
     handleCopyLink,
     handleShare,
+    handleFactCheck,
     openYoutubeModal,
     handlePostToSite,
     handleToggleRead,
