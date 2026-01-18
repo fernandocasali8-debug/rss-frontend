@@ -384,94 +384,6 @@ export default function LiveModePage() {
     }
   };
 
-  const connectSocket = React.useCallback((code, role) => {
-    const wsUrl = new URL(buildWsUrl('/live/ws'));
-    wsUrl.searchParams.set('code', code);
-    wsUrl.searchParams.set('role', role);
-    wsUrl.searchParams.set('name', userName || '');
-    const ws = new WebSocket(wsUrl.toString());
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setStatus('Conectado na sala.');
-    };
-    ws.onclose = (event) => {
-      if (event?.reason) {
-        setStatus(event.reason);
-        return;
-      }
-      setStatus('Conexao encerrada.');
-    };
-    ws.onerror = () => {
-      setStatus('Erro na conexao.');
-    };
-    ws.onmessage = async (event) => {
-      let payload = null;
-      try {
-        payload = JSON.parse(event.data);
-      } catch (e) {
-        return;
-      }
-      if (!payload) return;
-      if (payload.type === 'welcome') {
-        clientIdRef.current = payload.id;
-        setRoomExpiresAt(payload.expiresAt ? new Date(payload.expiresAt).toISOString() : '');
-        setPeers(payload.peers || []);
-        if (role === 'host') {
-          (payload.peers || []).forEach((peer) => {
-            if (peer.role === 'host') return;
-            createPeerConnection(peer.id, true);
-          });
-        } else {
-          const host = (payload.peers || []).find((peer) => peer.role === 'host');
-          if (host) {
-            createPeerConnection(host.id, false);
-          }
-        }
-      }
-      if (payload.type === 'peer-joined') {
-        setPeers((prev) => [...prev.filter((p) => p.id !== payload.id), payload]);
-        setChatMessages((prev) => [
-          ...prev,
-          { id: `${payload.id}-${Date.now()}`, text: `${payload.name || 'Convidado'} entrou.`, system: true }
-        ]);
-        if (role === 'host' && payload.role !== 'host') {
-          createPeerConnection(payload.id, true);
-        }
-      }
-      if (payload.type === 'peer-left') {
-        setPeers((prev) => prev.filter((p) => p.id !== payload.id));
-        setChatMessages((prev) => [
-          ...prev,
-          { id: `${payload.id}-${Date.now()}`, text: 'Convidado saiu.', system: true }
-        ]);
-        const pc = peersRef.current.get(payload.id);
-        if (pc) {
-          pc.close();
-          peersRef.current.delete(payload.id);
-        }
-        setRemoteStreams((prev) => {
-          const next = { ...prev };
-          delete next[payload.id];
-          return next;
-        });
-      }
-      if (payload.type === 'signal') {
-        await handleSignal(payload.from, payload.data);
-      }
-      if (payload.type === 'broadcast' && payload.data?.type === 'chat') {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            id: `${payload.from}-${Date.now()}`,
-            text: payload.data.text,
-            name: payload.data.name || 'Convidado'
-          }
-        ]);
-      }
-    };
-  }, [userName]);
-
   const sendSignal = (to, data) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -566,6 +478,94 @@ export default function LiveModePage() {
       }
     }
   };
+
+  const connectSocket = React.useCallback((code, role) => {
+    const wsUrl = new URL(buildWsUrl('/live/ws'));
+    wsUrl.searchParams.set('code', code);
+    wsUrl.searchParams.set('role', role);
+    wsUrl.searchParams.set('name', userName || '');
+    const ws = new WebSocket(wsUrl.toString());
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setStatus('Conectado na sala.');
+    };
+    ws.onclose = (event) => {
+      if (event?.reason) {
+        setStatus(event.reason);
+        return;
+      }
+      setStatus('Conexao encerrada.');
+    };
+    ws.onerror = () => {
+      setStatus('Erro na conexao.');
+    };
+    ws.onmessage = async (event) => {
+      let payload = null;
+      try {
+        payload = JSON.parse(event.data);
+      } catch (e) {
+        return;
+      }
+      if (!payload) return;
+      if (payload.type === 'welcome') {
+        clientIdRef.current = payload.id;
+        setRoomExpiresAt(payload.expiresAt ? new Date(payload.expiresAt).toISOString() : '');
+        setPeers(payload.peers || []);
+        if (role === 'host') {
+          (payload.peers || []).forEach((peer) => {
+            if (peer.role === 'host') return;
+            createPeerConnection(peer.id, true);
+          });
+        } else {
+          const host = (payload.peers || []).find((peer) => peer.role === 'host');
+          if (host) {
+            createPeerConnection(host.id, false);
+          }
+        }
+      }
+      if (payload.type === 'peer-joined') {
+        setPeers((prev) => [...prev.filter((p) => p.id !== payload.id), payload]);
+        setChatMessages((prev) => [
+          ...prev,
+          { id: `${payload.id}-${Date.now()}`, text: `${payload.name || 'Convidado'} entrou.`, system: true }
+        ]);
+        if (role === 'host' && payload.role !== 'host') {
+          createPeerConnection(payload.id, true);
+        }
+      }
+      if (payload.type === 'peer-left') {
+        setPeers((prev) => prev.filter((p) => p.id !== payload.id));
+        setChatMessages((prev) => [
+          ...prev,
+          { id: `${payload.id}-${Date.now()}`, text: 'Convidado saiu.', system: true }
+        ]);
+        const pc = peersRef.current.get(payload.id);
+        if (pc) {
+          pc.close();
+          peersRef.current.delete(payload.id);
+        }
+        setRemoteStreams((prev) => {
+          const next = { ...prev };
+          delete next[payload.id];
+          return next;
+        });
+      }
+      if (payload.type === 'signal') {
+        await handleSignal(payload.from, payload.data);
+      }
+      if (payload.type === 'broadcast' && payload.data?.type === 'chat') {
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: `${payload.from}-${Date.now()}`,
+            text: payload.data.text,
+            name: payload.data.name || 'Convidado'
+          }
+        ]);
+      }
+    };
+  }, [userName, createPeerConnection, handleSignal]);
 
   const handleCreateRoom = async () => {
     if (!authUser) {
@@ -724,7 +724,7 @@ export default function LiveModePage() {
     if (!viewOnly || !roomCode) return;
     if (wsRef.current) return;
     connectSocket(roomCode, 'viewer');
-  }, [viewOnly, roomCode]);
+  }, [viewOnly, roomCode, connectSocket]);
 
   return (
     <div
