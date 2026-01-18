@@ -190,6 +190,25 @@
   background: var(--surface);
 }
 
+.feed-repo-remove {
+  border: 1px solid rgba(240, 68, 56, 0.35);
+  background: rgba(240, 68, 56, 0.12);
+  color: #b42318;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.feed-repo-remove:hover {
+  background: rgba(240, 68, 56, 0.2);
+}
+
+.feed-repo-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .feed-repo-url {
   color: var(--muted);
   font-size: 0.85rem;

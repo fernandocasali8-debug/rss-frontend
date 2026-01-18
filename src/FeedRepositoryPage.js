@@ -346,6 +346,53 @@ export default function FeedRepositoryPage() {
     }
   };
 
+  const handleRemove = async (feed) => {
+    setMessage('');
+    const effectiveUrl = getEffectiveUrl(feed);
+    const existing = getExistingFeed(feed);
+    const feedName = getEffectiveName(feed);
+    if (!window.confirm(`Remover o feed "${feedName}" do repositorio?`)) {
+      return;
+    }
+    setLoadingId(`remove:${effectiveUrl}`);
+    try {
+      if (existing) {
+        const res = await apiFetch(`${API_BASE}/feeds/${existing.id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok && res.status !== 204) {
+          throw new Error('Falha ao remover feed.');
+        }
+        setExistingFeeds(prev => prev.filter(item => item.id !== existing.id));
+      }
+      if (feed.custom) {
+        const next = customFeeds.filter(item => normalizeUrl(item.url) !== normalizeUrl(feed.url));
+        setCustomFeeds(next);
+        localStorage.setItem('rss-repo-custom', JSON.stringify(next));
+        setCustomUrls(prev => {
+          const nextUrls = { ...prev };
+          delete nextUrls[feed.url];
+          return nextUrls;
+        });
+        setCustomNames(prev => {
+          const nextNames = { ...prev };
+          delete nextNames[feed.url];
+          return nextNames;
+        });
+      }
+      setStatusMap(prev => {
+        const next = { ...prev };
+        delete next[normalizeUrl(effectiveUrl)];
+        return next;
+      });
+      setMessage(`Feed removido: ${feedName}.`);
+    } catch (err) {
+      setMessage('Nao foi possivel remover o feed.');
+    } finally {
+      setLoadingId('');
+    }
+  };
+
   const handleToggleTimeline = async (feed) => {
     const existing = getExistingFeed(feed);
     if (!existing) {
@@ -523,6 +570,7 @@ export default function FeedRepositoryPage() {
           const effectiveUrl = getEffectiveUrl(feed);
           const existing = getExistingFeed(feed);
           const isAdded = existingUrlSet.has(normalizeUrl(effectiveUrl));
+          const isRemoving = loadingId === `remove:${effectiveUrl}`;
           const status = statusMap[normalizeUrl(effectiveUrl)];
           return (
             <div
@@ -573,6 +621,15 @@ export default function FeedRepositoryPage() {
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1 1 0 0 0 1.4 1.4l6-6a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z" />
                       </svg>
+                    </button>
+                  )}
+                  {(isAdded || feed.custom) && (
+                    <button
+                      className="feed-repo-remove"
+                      onClick={() => handleRemove(feed)}
+                      disabled={isRemoving || loadingId === effectiveUrl || loadingId === existing?.url}
+                    >
+                      {isRemoving ? 'Removendo...' : 'Remover'}
                     </button>
                   )}
                   <button
