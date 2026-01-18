@@ -15,6 +15,10 @@ export default function FactCheckPage() {
   const [favorites, setFavorites] = useState([]);
   const [publisherFilter, setPublisherFilter] = useState('all');
   const [alertMessage, setAlertMessage] = useState('');
+  const [summaryItems, setSummaryItems] = useState([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,6 +35,58 @@ export default function FactCheckPage() {
     } catch (e) {
       // ignore
     }
+  }, []);
+
+  useEffect(() => {
+    const stopwords = new Set([
+      'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na',
+      'nos', 'nas', 'por', 'para', 'com', 'sem', 'sobre', 'que', 'e', 'ou', 'se', 'ao', 'aos', 'nao', 'mais',
+      'menos', 'muito', 'muita', 'muitos', 'muitas', 'ja', 'ser', 'sao', 'foi', 'era', 'esta', 'estao', 'tem',
+      'ter', 'vai', 'vao', 'como', 'sua', 'seu', 'sua', 'seus', 'suas'
+    ]);
+
+    const pickTerms = (titles) => {
+      const counts = new Map();
+      titles.forEach((title) => {
+        String(title || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .split(/\s+/)
+          .filter((word) => word.length >= 4 && !stopwords.has(word))
+          .forEach((word) => counts.set(word, (counts.get(word) || 0) + 1));
+      });
+      return Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([term]) => term);
+    };
+
+    const loadSummary = async () => {
+      setSummaryLoading(true);
+      setSummaryError('');
+      try {
+        const res = await apiFetch(`${API_BASE}/aggregate`);
+        const data = await res.json();
+        const titles = Array.isArray(data) ? data.slice(0, 8).map((item) => item.title) : [];
+        const terms = pickTerms(titles);
+        const fallbackTerms = terms.length ? terms : ['vacina', 'economia', 'eleicao'];
+        const results = await Promise.all(
+          fallbackTerms.map(async (term) => {
+            const checkRes = await apiFetch(`${API_BASE}/factcheck/search?query=${encodeURIComponent(term)}`);
+            const checkData = await checkRes.json();
+            const items = Array.isArray(checkData.items) ? checkData.items.slice(0, 2) : [];
+            return { term, items };
+          })
+        );
+        setSummaryItems(results.filter((entry) => entry.items.length > 0));
+      } catch (err) {
+        setSummaryError('Nao foi possivel carregar o resumo atual.');
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+
+    loadSummary();
   }, []);
 
   const saveRecent = (term) => {
@@ -61,6 +117,7 @@ export default function FactCheckPage() {
     setError('');
     setItems([]);
     setAlertMessage('');
+    setHasSearched(true);
     try {
       const res = await apiFetch(`${API_BASE}/factcheck/search?query=${encodeURIComponent(cleaned)}`);
       const data = await res.json();
@@ -186,6 +243,40 @@ export default function FactCheckPage() {
           {loading ? 'Buscando...' : 'Checar'}
         </button>
       </form>
+
+      {!hasSearched && (
+        <div className="fact-check-summary">
+          <div className="fact-check-summary-header">
+            <h3>Resumo atual</h3>
+            <span>Agencias em destaque</span>
+          </div>
+          {summaryLoading && <div className="fact-check-summary-status">Carregando resumo...</div>}
+          {summaryError && <div className="fact-check-error">{summaryError}</div>}
+          {!summaryLoading && !summaryError && summaryItems.length === 0 && (
+            <div className="fact-check-summary-status">Nenhuma checagem recente encontrada.</div>
+          )}
+          {!summaryLoading && !summaryError && summaryItems.length > 0 && (
+            <div className="fact-check-summary-grid">
+              {summaryItems.map((entry) => (
+                <div key={entry.term} className="fact-check-summary-card">
+                  <div className="fact-check-summary-term">{entry.term}</div>
+                  {entry.items.map((claim) => (
+                    <div key={claim.id} className="fact-check-summary-item">
+                      <div className="fact-check-summary-title">{claim.text}</div>
+                      <div className="fact-check-summary-meta">
+                        {(claim.reviews?.[0]?.publisher || 'Fonte')}{claim.reviews?.[0]?.rating ? ` · ${claim.reviews[0].rating}` : ''}
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => runSearch(entry.term)}>
+                    Ver mais checagens
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="fact-check-toolbar">
         <div className="fact-check-filter">
