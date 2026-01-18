@@ -794,15 +794,6 @@ function MainApp({ initialPage }) {
               <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white"
-                onClick={() => window.open('/app?display=1', '_blank', 'noopener,noreferrer')}
-                aria-label="Abrir modo transmissÃ£o"
-              >
-                  <MonitorPlay size={18} />
-                  <span className="hidden sm:inline">Modo transmissÃ£o</span>
-                </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white"
                 onClick={() => setTheme(current => (current === 'dark' ? 'light' : 'dark'))}
                 aria-label="Alternar modo noturno"
               >
