@@ -117,7 +117,7 @@ export default function SpacesLivePage() {
                 onError={handleFaviconError}
               />
               <div>
-                <div className="spaces-live-title">{item.title}</div>
+                <div className="spaces-live-title">{item.title || item.fallbackTitle || 'Space ao vivo'}</div>
                 <div className="spaces-live-host">
                   {item.hostName || item.hostHandle || 'Host'}
                   {item.hostHandle ? ` (@${item.hostHandle})` : ''}

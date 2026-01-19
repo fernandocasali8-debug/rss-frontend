@@ -196,7 +196,7 @@ export default function PublicSpacesPage() {
                       onError={handleFaviconError}
                     />
                     <div>
-                      <div className="public-spaces-title">{item.title}</div>
+              <div className="public-spaces-title">{item.title || item.fallbackTitle || 'Space ao vivo'}</div>
                       <div className="public-spaces-host">
                         {item.hostName || item.hostHandle || 'Host'}
                         {item.hostHandle ? ` (@${item.hostHandle})` : ''}
@@ -217,7 +217,9 @@ export default function PublicSpacesPage() {
           <div className="public-spaces-chat-header">
             <h2>Chat ao vivo</h2>
             {selected && (
-              <div className="public-spaces-chat-title">{selected.title}</div>
+              <div className="public-spaces-chat-title">
+                {selected.title || selected.fallbackTitle || 'Space ao vivo'}
+              </div>
             )}
           </div>
           {!selected && <div className="public-spaces-empty">Selecione um space.</div>}
