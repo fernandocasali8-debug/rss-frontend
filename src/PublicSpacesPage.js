@@ -66,7 +66,7 @@ export default function PublicSpacesPage() {
       setUpdatedAt(data.updatedAt ? new Date(data.updatedAt).toISOString() : '');
       setSource(data.source || '');
       if (!selected && items.length) {
-        setSelected(items[0]);
+        setSelected(null);
         setChatActive(false);
       }
       if (data.stale) {
@@ -138,6 +138,12 @@ export default function PublicSpacesPage() {
     [...spaces].sort((a, b) => (b.listeners || 0) - (a.listeners || 0))
   ), [spaces]);
 
+  const getDisplayTitle = (item) => {
+    const title = (item.title || item.fallbackTitle || '').trim();
+    if (!title || title.toLowerCase() === 'space ao vivo') return 'Space ao vivo';
+    return title;
+  };
+
   return (
     <div className="public-spaces">
       <header className="public-spaces-header">
@@ -179,14 +185,9 @@ export default function PublicSpacesPage() {
             {sortedSpaces.map((item) => {
               const isActive = selected?.spaceUrl === item.spaceUrl;
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
                   className={`public-spaces-card ${isActive ? 'is-active' : ''}`}
-                  onClick={() => {
-                    setSelected(item);
-                    setChatActive(false);
-                  }}
                 >
                   <div className="public-spaces-card-header">
                     <img
@@ -196,7 +197,7 @@ export default function PublicSpacesPage() {
                       onError={handleFaviconError}
                     />
                     <div>
-              <div className="public-spaces-title">{item.title || item.fallbackTitle || 'Space ao vivo'}</div>
+                      <div className="public-spaces-title">{getDisplayTitle(item)}</div>
                       <div className="public-spaces-host">
                         {item.hostName || item.hostHandle || 'Host'}
                         {item.hostHandle ? ` (@${item.hostHandle})` : ''}
@@ -208,7 +209,23 @@ export default function PublicSpacesPage() {
                     {item.speakers ? <span>Speakers: {formatNumber(item.speakers)}</span> : null}
                     {item.startedAt ? <span>Inicio: {item.startedAt}</span> : null}
                   </div>
-                </button>
+                  <div className="public-spaces-card-actions">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelected(item);
+                        setChatActive(true);
+                      }}
+                    >
+                      Entrar no chat
+                    </button>
+                    {item.detailUrl && (
+                      <a href={item.detailUrl} target="_blank" rel="noreferrer">
+                        Detalhes
+                      </a>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -222,30 +239,7 @@ export default function PublicSpacesPage() {
               </div>
             )}
           </div>
-          {!selected && <div className="public-spaces-empty">Selecione um space.</div>}
-          {selected && !chatActive && (
-            <>
-              <div className="public-spaces-chat-links">
-                {selected.spaceUrl && (
-                  <a href={selected.spaceUrl} target="_blank" rel="noreferrer">
-                    Abrir no X
-                  </a>
-                )}
-                {selected.detailUrl && (
-                  <a href={selected.detailUrl} target="_blank" rel="noreferrer">
-                    Ver detalhes
-                  </a>
-                )}
-              </div>
-              <button
-                type="button"
-                className="public-spaces-chat-join"
-                onClick={() => setChatActive(true)}
-              >
-                Entrar no chat desta sala
-              </button>
-            </>
-          )}
+          {!selected && <div className="public-spaces-empty">Selecione uma sala.</div>}
           {selected && chatActive && (
             <>
               <div className="public-spaces-chat-controls">

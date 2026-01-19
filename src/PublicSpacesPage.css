@@ -127,7 +127,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -166,6 +165,34 @@
   gap: 10px;
   font-size: 0.75rem;
   color: #64748b;
+}
+
+.public-spaces-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.public-spaces-card-actions button {
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.public-spaces-card-actions a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.public-spaces-card-actions a:hover {
+  text-decoration: underline;
 }
 
 .public-spaces-chat {
@@ -210,16 +237,6 @@
   flex-wrap: wrap;
 }
 
-.public-spaces-chat-join {
-  border: none;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  width: fit-content;
-}
 
 .public-spaces-chat-links a {
   font-size: 0.8rem;
