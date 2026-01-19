@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './PublicSpacesPage.css';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -53,7 +53,7 @@ export default function PublicSpacesPage() {
     return { total: spaces.length, totalListeners };
   }, [spaces]);
 
-  const loadSpaces = async () => {
+  const loadSpaces = useCallback(async () => {
     setLoading(true);
     setMessage('');
     try {
@@ -76,13 +76,13 @@ export default function PublicSpacesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selected]);
 
   useEffect(() => {
     loadSpaces();
     const interval = setInterval(loadSpaces, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadSpaces]);
 
   useEffect(() => {
     if (!selected) return;
