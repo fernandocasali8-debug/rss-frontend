@@ -230,6 +230,16 @@
   gap: 10px;
 }
 
+.watch-report-status {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .watch-report-preview,
 .watch-report-items {
   border: 1px solid var(--border);

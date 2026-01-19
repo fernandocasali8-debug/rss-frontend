@@ -514,6 +514,22 @@ export default function WatchPage() {
     }
   };
 
+  const reportStatusLabel = useMemo(() => {
+    const rangeLabel = reportRange === '2h' ? 'ultimas 2 horas'
+      : reportRange === '3h' ? 'ultimas 3 horas'
+        : reportRange === '24h' ? 'ultimo dia'
+          : 'ultima hora';
+    const base = `Automatizacao ${reportAutoEnabled ? 'ativada' : 'desativada'}.`;
+    const details = [
+      `Periodo: ${rangeLabel}`,
+      `Itens: ${reportMaxItems}`,
+      `IA: ${reportUseAi ? 'sim' : 'nao'}`,
+      `Reescrever: ${reportAiRewrite ? 'sim' : 'nao'}`,
+      `Intervalo: ${reportAutoIntervalHours}h`
+    ].join(' | ');
+    return `${base} ${details}`;
+  }, [reportAutoEnabled, reportAiRewrite, reportAutoIntervalHours, reportMaxItems, reportRange, reportUseAi]);
+
   const getAlertItemId = (alert) => {
     return alert.item?.link || alert.item?.guid || alert.id;
   };
@@ -795,6 +811,9 @@ export default function WatchPage() {
                       }}
                     />
                   </label>
+                </div>
+                <div className="watch-report-status">
+                  {reportStatusLabel}
                 </div>
                 <div className="watch-report-actions">
                   <button
