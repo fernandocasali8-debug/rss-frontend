@@ -75,6 +75,16 @@ export default function WatchPage() {
   const [savedItems, setSavedItems] = useState([]);
   const [savingIds, setSavingIds] = useState([]);
   const [openPanel, setOpenPanel] = useState(null);
+  const [reportRange, setReportRange] = useState('1h');
+  const [reportMaxItems, setReportMaxItems] = useState(5);
+  const [reportUseAi, setReportUseAi] = useState(true);
+  const [reportAiRewrite, setReportAiRewrite] = useState(true);
+  const [reportAutoEnabled, setReportAutoEnabled] = useState(false);
+  const [reportAutoIntervalHours, setReportAutoIntervalHours] = useState(3);
+  const [reportPreview, setReportPreview] = useState('');
+  const [reportItems, setReportItems] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
   const dropdownRef = useRef(null);
   const lastCheckRef = useRef(null);
   const alertIdsRef = useRef(new Set());
@@ -156,6 +166,19 @@ export default function WatchPage() {
             localStorage.setItem(WATCH_RELEVANCE_KEY, String(next));
           } catch (e) {
             // ignore
+          }
+        }
+        if (data.report && typeof data.report === 'object') {
+          const report = data.report;
+          if (report.range) setReportRange(report.range);
+          if (Number.isFinite(Number(report.maxItems))) {
+            setReportMaxItems(Math.min(20, Math.max(1, Number(report.maxItems))));
+          }
+          if (typeof report.useAi === 'boolean') setReportUseAi(report.useAi);
+          if (typeof report.aiRewrite === 'boolean') setReportAiRewrite(report.aiRewrite);
+          if (typeof report.autoEnabled === 'boolean') setReportAutoEnabled(report.autoEnabled);
+          if (Number.isFinite(Number(report.autoIntervalHours))) {
+            setReportAutoIntervalHours(Math.min(24, Math.max(1, Number(report.autoIntervalHours))));
           }
         }
       })
@@ -366,11 +389,34 @@ export default function WatchPage() {
     return sorted.map(item => item.alert);
   }, [alerts, newAlertIds, newOnly, recencyWeight, sortMode, timeRange, topicFilter, topicsById]);
 
+  const buildSettingsPayload = (overrides = {}) => {
+    const base = {
+      viewMode,
+      timeRange,
+      sortMode,
+      topicFilter,
+      newOnly,
+      recencyWeight,
+      report: {
+        range: reportRange,
+        maxItems: reportMaxItems,
+        useAi: reportUseAi,
+        aiRewrite: reportAiRewrite,
+        autoEnabled: reportAutoEnabled,
+        autoIntervalHours: reportAutoIntervalHours
+      }
+    };
+    if (overrides.report && typeof overrides.report === 'object') {
+      base.report = { ...base.report, ...overrides.report };
+    }
+    return { ...base, ...overrides, report: base.report };
+  };
+
   const persistSettings = (next) => {
     apiFetch(`${API_BASE}/watch/settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(next)
+      body: JSON.stringify(buildSettingsPayload(next))
     }).catch(() => {
       // ignore
     });
@@ -416,6 +462,56 @@ export default function WatchPage() {
       // ignore
     }
     persistSettings({ recencyWeight: safe });
+  };
+
+  const handleReportPreview = async () => {
+    setReportLoading(true);
+    setReportMessage('');
+    try {
+      const res = await apiFetch(`${API_BASE}/watch/report/preview?range=${encodeURIComponent(reportRange)}`);
+      const data = await res.json();
+      if (!data || !data.ok) {
+        setReportMessage(data?.message || 'Falha ao gerar relatorio.');
+        setReportPreview('');
+        setReportItems([]);
+        return;
+      }
+      setReportPreview(data.report || '');
+      setReportItems(Array.isArray(data.items) ? data.items : []);
+    } catch (err) {
+      setReportMessage('Falha ao gerar relatorio.');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleReportPost = async () => {
+    setReportLoading(true);
+    setReportMessage('');
+    try {
+      const res = await apiFetch(`${API_BASE}/watch/report/post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          range: reportRange,
+          maxItems: reportMaxItems,
+          useAi: reportUseAi,
+          aiRewrite: reportAiRewrite
+        })
+      });
+      const data = await res.json();
+      if (!data || !data.ok) {
+        setReportMessage(data?.message || 'Falha ao publicar relatorio.');
+        return;
+      }
+      setReportPreview(data.report || '');
+      setReportItems(Array.isArray(data.items) ? data.items : []);
+      setReportMessage('Relatorio publicado no X.');
+    } catch (err) {
+      setReportMessage('Falha ao publicar relatorio.');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const getAlertItemId = (alert) => {
@@ -590,6 +686,153 @@ export default function WatchPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="watch-dropdown">
+          <button
+            type="button"
+            className={`watch-dropdown-toggle ${openPanel === 'report' ? 'is-open' : ''}`}
+            onClick={() => setOpenPanel(openPanel === 'report' ? null : 'report')}
+          >
+            <span>Relatorio</span>
+            <span className={`watch-dropdown-icon ${openPanel === 'report' ? 'is-open' : ''}`}>+</span>
+          </button>
+          {openPanel === 'report' && (
+            <div className="watch-dropdown-panel">
+              <div className="watch-card">
+                <h3>Relatorio com IA</h3>
+                <p className="watch-card-subtitle">
+                  Gere um report dos acompanhamentos e publique no X.
+                </p>
+                <div className="watch-row">
+                  <label className="feed-field">
+                    <span className="feed-label">Periodo</span>
+                    <select
+                      className="feed-input"
+                      value={reportRange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setReportRange(value);
+                        persistSettings({ report: { range: value } });
+                      }}
+                    >
+                      <option value="1h">Ultima hora</option>
+                      <option value="2h">Ultimas 2 horas</option>
+                      <option value="3h">Ultimas 3 horas</option>
+                      <option value="24h">Ultimo dia</option>
+                    </select>
+                  </label>
+                  <label className="feed-field">
+                    <span className="feed-label">Itens por relatorio</span>
+                    <input
+                      className="feed-input"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={reportMaxItems}
+                      onChange={(e) => {
+                        const value = Math.min(20, Math.max(1, Number(e.target.value) || 5));
+                        setReportMaxItems(value);
+                        persistSettings({ report: { maxItems: value } });
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="watch-row">
+                  <label className="watch-toggle">
+                    <input
+                      type="checkbox"
+                      checked={reportUseAi}
+                      onChange={(e) => {
+                        const value = e.target.checked;
+                        setReportUseAi(value);
+                        persistSettings({ report: { useAi: value } });
+                      }}
+                    />
+                    <span>Curadoria por IA</span>
+                  </label>
+                  <label className="watch-toggle">
+                    <input
+                      type="checkbox"
+                      checked={reportAiRewrite}
+                      onChange={(e) => {
+                        const value = e.target.checked;
+                        setReportAiRewrite(value);
+                        persistSettings({ report: { aiRewrite: value } });
+                      }}
+                    />
+                    <span>Reescrever em formato de report</span>
+                  </label>
+                </div>
+                <div className="watch-row">
+                  <label className="watch-toggle">
+                    <input
+                      type="checkbox"
+                      checked={reportAutoEnabled}
+                      onChange={(e) => {
+                        const value = e.target.checked;
+                        setReportAutoEnabled(value);
+                        persistSettings({ report: { autoEnabled: value } });
+                      }}
+                    />
+                    <span>Automatizar no X</span>
+                  </label>
+                  <label className="feed-field">
+                    <span className="feed-label">Intervalo (horas)</span>
+                    <input
+                      className="feed-input"
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={reportAutoIntervalHours}
+                      onChange={(e) => {
+                        const value = Math.min(24, Math.max(1, Number(e.target.value) || 3));
+                        setReportAutoIntervalHours(value);
+                        persistSettings({ report: { autoIntervalHours: value } });
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="watch-report-actions">
+                  <button
+                    type="button"
+                    className="watch-button"
+                    onClick={handleReportPreview}
+                    disabled={reportLoading}
+                  >
+                    {reportLoading ? 'Gerando...' : 'Preview do relatorio'}
+                  </button>
+                  <button
+                    type="button"
+                    className="watch-button is-secondary"
+                    onClick={handleReportPost}
+                    disabled={reportLoading}
+                  >
+                    Publicar no X
+                  </button>
+                </div>
+                {reportMessage && <div className="watch-message">{reportMessage}</div>}
+                {reportPreview && (
+                  <div className="watch-report-preview">
+                    <div className="watch-report-title">Preview</div>
+                    <pre className="watch-report-body">{reportPreview}</pre>
+                  </div>
+                )}
+                {reportItems.length > 0 && (
+                  <div className="watch-report-items">
+                    <div className="watch-report-title">Itens usados</div>
+                    <ul>
+                      {reportItems.map((item, index) => (
+                        <li key={`${item.link || item.title}-${index}`}>
+                          {item.title || 'Sem titulo'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}
