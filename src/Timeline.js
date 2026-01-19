@@ -114,7 +114,8 @@ export default function Timeline() {
   const [loading, setLoading] = useState(true);
   const [accessRestricted, setAccessRestricted] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [countdown] = useState(Math.ceil(REFRESH_MS / 1000));
+  const [countdown, setCountdown] = useState(Math.ceil(REFRESH_MS / 1000));
+  const nextRefreshRef = React.useRef(Date.now() + REFRESH_MS);
   const [savedItems, setSavedItems] = useState([]);
   const [savingIds, setSavingIds] = useState([]);
   const [query, setQuery] = useState('');
@@ -526,7 +527,9 @@ export default function Timeline() {
     window.open(aiSelectedImage.regularUrl, '_blank', 'noopener,noreferrer');
   };
 
-    const fetchPosts = () => {
+  const fetchPosts = () => {
+    nextRefreshRef.current = Date.now() + REFRESH_MS;
+    setCountdown(Math.ceil(REFRESH_MS / 1000));
     apiFetch(API_BASE + '/aggregate')
       .then(async (res) => {
         const data = await res.json().catch(() => null);
@@ -589,8 +592,23 @@ export default function Timeline() {
       }
     }
     fetchPosts();
-    const interval = setInterval(fetchPosts, REFRESH_MS);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((nextRefreshRef.current - Date.now()) / 1000));
+      setCountdown(remaining);
+      if (remaining <= 0) {
+        fetchPosts();
+      }
+    }, 1000);
+    const onFocus = () => {
+      if (Date.now() >= nextRefreshRef.current) {
+        fetchPosts();
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   useEffect(() => {
