@@ -129,6 +129,16 @@ export default function SpacesLivePage() {
               {item.speakers ? <span>Speakers: {formatNumber(item.speakers)}</span> : null}
               {item.startedAt ? <span>Inicio: {item.startedAt}</span> : null}
             </div>
+            {Array.isArray(item.titleHistory) && item.titleHistory.length > 1 && (
+              <div className="spaces-live-history">
+                <div className="spaces-live-history-label">Titulos anteriores</div>
+                <ul>
+                  {item.titleHistory.slice(0, -1).map((title) => (
+                    <li key={title}>{title}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="spaces-live-actions">
               {item.spaceUrl && (
                 <a href={item.spaceUrl} target="_blank" rel="noreferrer">

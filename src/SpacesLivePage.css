@@ -154,6 +154,26 @@
   text-decoration: underline;
 }
 
+.spaces-live-history {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.spaces-live-history-label {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.spaces-live-history ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
 @media (max-width: 700px) {
   .spaces-live-header {
     flex-direction: column;
