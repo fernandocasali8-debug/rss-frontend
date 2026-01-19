@@ -78,6 +78,8 @@ const DEFAULT_AUTOMATION = {
     useWatchTopics: false,
     useAiSummary: false,
     aiMode: 'twitter_cta',
+    maxChars: 4000,
+    maxItemsPerPost: 5,
     requireWords: [],
     blockWords: [],
     onlyWithLink: true,
@@ -2044,6 +2046,20 @@ export default function ConfigPage({
                 />
               </label>
               <label className="feed-field">
+                <span className="feed-label">Itens por post (clipping)</span>
+                <input
+                  className="feed-input"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={automation.rules.maxItemsPerPost}
+                  onChange={(e) => setAutomation(prev => ({
+                    ...prev,
+                    rules: { ...prev.rules, maxItemsPerPost: Number(e.target.value) }
+                  }))}
+                />
+              </label>
+              <label className="feed-field">
                 <span className="feed-label">Intervalo mínimo (min)</span>
                 <input
                   className="feed-input"
@@ -2054,6 +2070,20 @@ export default function ConfigPage({
                   onChange={(e) => setAutomation(prev => ({
                     ...prev,
                     rules: { ...prev.rules, minIntervalMinutes: Number(e.target.value) }
+                  }))}
+                />
+              </label>
+              <label className="feed-field">
+                <span className="feed-label">Tamanho máximo do post</span>
+                <input
+                  className="feed-input"
+                  type="number"
+                  min="280"
+                  max="10000"
+                  value={automation.rules.maxChars}
+                  onChange={(e) => setAutomation(prev => ({
+                    ...prev,
+                    rules: { ...prev.rules, maxChars: Number(e.target.value) }
                   }))}
                 />
               </label>
@@ -2128,6 +2158,24 @@ export default function ConfigPage({
               />
               Gerar clipping com IA
             </label>
+            <label className="ticker-toggle">
+              <input
+                type="checkbox"
+                checked={automation.rules.template.trim() === '{title}'}
+                onChange={(e) => {
+                  const onlyTitle = e.target.checked;
+                  setAutomation(prev => ({
+                    ...prev,
+                    rules: {
+                      ...prev.rules,
+                      template: onlyTitle ? '{title}' : prev.rules.template,
+                      onlyWithLink: onlyTitle ? false : prev.rules.onlyWithLink
+                    }
+                  }));
+                }}
+              />
+              Somente manchete (sem link)
+            </label>
             <div className="automation-actions">
               <button className="display-open-button" onClick={saveAutomation} disabled={automationSaving}>
                 {automationSaving ? 'Salvando...' : 'Salvar automação'}
@@ -2144,13 +2192,12 @@ export default function ConfigPage({
               <div className="automation-preview">
                 {automationPreview.ok ? (
                   <>
-                    <div className="automation-preview-title">Próximo post elegível:</div>
-                    <div className="automation-preview-item">
-                      <strong>{automationPreview.candidate.feedName}</strong> — {automationPreview.candidate.title}
-                    </div>
-                    {automationPreview.candidate.link && (
-                      <div className="automation-preview-link">{automationPreview.candidate.link}</div>
-                    )}
+                    <div className="automation-preview-title">Próximos posts elegíveis:</div>
+                    {(automationPreview.candidates || []).map((item, idx) => (
+                      <div key={`${item.link || item.title}-${idx}`} className="automation-preview-item">
+                        <strong>{item.feedName || item.topicName || 'Fonte'}</strong> — {item.title}
+                      </div>
+                    ))}
                   </>
                 ) : (
                   <div className="automation-preview-empty">{automationPreview.reason || 'Sem itens elegíveis.'}</div>
