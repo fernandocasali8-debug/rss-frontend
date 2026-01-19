@@ -22,6 +22,7 @@ import PublicWatchSite from './PublicWatchSite';
 import XGeneratorPage from './XGeneratorPage';
 import FactCheckPage from './FactCheckPage';
 import SpacesLivePage from './SpacesLivePage';
+import PublicSpacesPage from './PublicSpacesPage';
 import Sidebar from './Sidebar';
 import {
   Bell,
@@ -1046,6 +1047,9 @@ function App() {
   }
   if (pathname.startsWith('/noticias')) {
     return <PublicWatchSite />;
+  }
+  if (pathname.startsWith('/pagina')) {
+    return <PublicSpacesPage />;
   }
   if (pathname.startsWith('/site/')) {
     const slug = pathname.replace('/site/', '').split('/')[0];
