@@ -46,6 +46,7 @@ export default function PublicSpacesPage() {
   const [name, setName] = useState('');
   const [chatItems, setChatItems] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [chatActive, setChatActive] = useState(false);
   const wsRef = useRef(null);
 
   const stats = useMemo(() => {
@@ -66,6 +67,7 @@ export default function PublicSpacesPage() {
       setSource(data.source || '');
       if (!selected && items.length) {
         setSelected(items[0]);
+        setChatActive(false);
       }
       if (data.stale) {
         setMessage('Cache exibido. Falha ao atualizar agora.');
@@ -85,7 +87,13 @@ export default function PublicSpacesPage() {
   }, [loadSpaces]);
 
   useEffect(() => {
-    if (!selected) return;
+    if (!selected || !chatActive) {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      return;
+    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -117,7 +125,7 @@ export default function PublicSpacesPage() {
     return () => {
       ws.close();
     };
-  }, [selected, name]);
+  }, [selected, name, chatActive]);
 
   const handleSend = () => {
     const text = chatInput.trim();
@@ -125,6 +133,10 @@ export default function PublicSpacesPage() {
     wsRef.current.send(JSON.stringify({ type: 'message', text }));
     setChatInput('');
   };
+
+  const sortedSpaces = useMemo(() => (
+    [...spaces].sort((a, b) => (b.listeners || 0) - (a.listeners || 0))
+  ), [spaces]);
 
   return (
     <div className="public-spaces">
@@ -164,14 +176,17 @@ export default function PublicSpacesPage() {
             <div className="public-spaces-empty">Nenhum space encontrado.</div>
           )}
           <div className="public-spaces-grid">
-            {spaces.map((item) => {
+            {sortedSpaces.map((item) => {
               const isActive = selected?.spaceUrl === item.spaceUrl;
               return (
                 <button
                   key={item.id}
                   type="button"
                   className={`public-spaces-card ${isActive ? 'is-active' : ''}`}
-                  onClick={() => setSelected(item)}
+                  onClick={() => {
+                    setSelected(item);
+                    setChatActive(false);
+                  }}
                 >
                   <div className="public-spaces-card-header">
                     <img
@@ -206,7 +221,30 @@ export default function PublicSpacesPage() {
             )}
           </div>
           {!selected && <div className="public-spaces-empty">Selecione um space.</div>}
-          {selected && (
+          {selected && !chatActive && (
+            <>
+              <div className="public-spaces-chat-links">
+                {selected.spaceUrl && (
+                  <a href={selected.spaceUrl} target="_blank" rel="noreferrer">
+                    Abrir no X
+                  </a>
+                )}
+                {selected.detailUrl && (
+                  <a href={selected.detailUrl} target="_blank" rel="noreferrer">
+                    Ver detalhes
+                  </a>
+                )}
+              </div>
+              <button
+                type="button"
+                className="public-spaces-chat-join"
+                onClick={() => setChatActive(true)}
+              >
+                Entrar no chat desta sala
+              </button>
+            </>
+          )}
+          {selected && chatActive && (
             <>
               <div className="public-spaces-chat-controls">
                 <label>

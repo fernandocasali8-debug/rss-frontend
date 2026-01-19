@@ -210,6 +210,17 @@
   flex-wrap: wrap;
 }
 
+.public-spaces-chat-join {
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+}
+
 .public-spaces-chat-links a {
   font-size: 0.8rem;
   font-weight: 600;
