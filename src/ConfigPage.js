@@ -75,6 +75,9 @@ const DEFAULT_AUTOMATION = {
   rules: {
     enabled: false,
     feedIds: [],
+    useWatchTopics: false,
+    useAiSummary: false,
+    aiMode: 'twitter_cta',
     requireWords: [],
     blockWords: [],
     onlyWithLink: true,
@@ -85,7 +88,7 @@ const DEFAULT_AUTOMATION = {
       start: '22:00',
       end: '07:00'
     },
-    template: '{title} {link}'
+    template: '{title} - {source} {date} {time} {link}'
   }
 };
 
@@ -399,7 +402,12 @@ export default function ConfigPage({
     apiFetch(API_BASE + '/automation')
       .then(res => res.json())
       .then(data => {
-        setAutomation({ ...DEFAULT_AUTOMATION, ...data });
+        setAutomation({
+          ...DEFAULT_AUTOMATION,
+          ...data,
+          credentials: { ...DEFAULT_AUTOMATION.credentials, ...(data.credentials || {}) },
+          rules: { ...DEFAULT_AUTOMATION.rules, ...(data.rules || {}) }
+        });
       })
       .catch(() => {
         // ignore
@@ -1943,9 +1951,35 @@ export default function ConfigPage({
               </label>
             </div>
             <div className="automation-hint">O Bearer Token não é necessário para postar.</div>
+            <label className="ticker-toggle">
+              <input
+                type="checkbox"
+                checked={!!automation.rules.useWatchTopics}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  setAutomation(prev => ({
+                    ...prev,
+                    rules: {
+                      ...prev.rules,
+                      useWatchTopics: enabled,
+                      minIntervalMinutes: enabled
+                        ? Math.max(prev.rules.minIntervalMinutes || 0, 180)
+                        : prev.rules.minIntervalMinutes
+                    }
+                  }));
+                }}
+              />
+              Usar Acompanhamentos como fonte
+            </label>
+            {automation.rules.useWatchTopics && (
+              <div className="automation-hint">
+                A automação vai postar somente itens que baterem nos termos de Acompanhamentos.
+              </div>
+            )}
             <span className="feed-label">Fontes para automação</span>
             <AutomationFeedSelector
               selectedIds={automation.rules.feedIds}
+              disabled={automation.rules.useWatchTopics}
               onChange={(ids) => setAutomation(prev => ({
                 ...prev,
                 rules: { ...prev.rules, feedIds: ids }
@@ -2081,7 +2115,18 @@ export default function ConfigPage({
                   rules: { ...prev.rules, template: e.target.value }
                 }))}
               />
-              <span className="feed-help">Use {'{title}'} e {'{link}'}.</span>
+              <span className="feed-help">Use {'{title}'}, {'{link}'}, {'{source}'}, {'{date}'}, {'{time}'}.</span>
+            </label>
+            <label className="ticker-toggle">
+              <input
+                type="checkbox"
+                checked={!!automation.rules.useAiSummary}
+                onChange={(e) => setAutomation(prev => ({
+                  ...prev,
+                  rules: { ...prev.rules, useAiSummary: e.target.checked }
+                }))}
+              />
+              Gerar clipping com IA
             </label>
             <div className="automation-actions">
               <button className="display-open-button" onClick={saveAutomation} disabled={automationSaving}>
@@ -3754,7 +3799,7 @@ export default function ConfigPage({
   );
 }
 
-function AutomationFeedSelector({ selectedIds, onChange }) {
+function AutomationFeedSelector({ selectedIds, onChange, disabled = false }) {
   const [feeds, setFeeds] = React.useState([]);
 
   React.useEffect(() => {
@@ -3769,7 +3814,7 @@ function AutomationFeedSelector({ selectedIds, onChange }) {
   }, []);
 
   const toggleFeed = (id) => {
-    if (!onChange) return;
+    if (!onChange || disabled) return;
     if (selectedIds.includes(id)) {
       onChange(selectedIds.filter(item => item !== id));
       return;
@@ -3785,6 +3830,7 @@ function AutomationFeedSelector({ selectedIds, onChange }) {
             type="checkbox"
             checked={selectedIds.includes(feed.id)}
             onChange={() => toggleFeed(feed.id)}
+            disabled={disabled}
           />
           {feed.name}
         </label>
