@@ -21,6 +21,7 @@ import PublicSite from './PublicSite';
 import PublicWatchSite from './PublicWatchSite';
 import XGeneratorPage from './XGeneratorPage';
 import FactCheckPage from './FactCheckPage';
+import SpacesLivePage from './SpacesLivePage';
 import Sidebar from './Sidebar';
 import {
   Bell,
@@ -30,6 +31,7 @@ import {
   Folder,
   LayoutDashboard,
   Menu,
+  Mic,
   Moon,
   Search,
   Rss,
@@ -73,7 +75,8 @@ const ROUTE_SECTIONS = [
       { key: 'home', label: 'Linha do tempo', icon: Rss },
       { key: 'saved', label: 'Salvos', icon: Bookmark },
       { key: 'watch', label: 'Acompanhamentos', icon: Eye },
-      { key: 'fact-check', label: 'Fact Check', icon: Search }
+      { key: 'fact-check', label: 'Fact Check', icon: Search },
+      { key: 'spaces-live', label: 'Spaces', icon: Mic }
     ]
   },
   {
@@ -100,10 +103,10 @@ const ROUTE_SECTIONS = [
 ];
 
 const PLAN_ACCESS = {
-  starter: ['dashboard', 'home', 'saved', 'fact-check'],
-  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'fact-check'],
-  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check'],
-  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check']
+  starter: ['dashboard', 'home', 'saved', 'fact-check', 'spaces-live'],
+  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'fact-check', 'spaces-live'],
+  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live'],
+  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live']
 };
 
 const TrendsPlaceholder = ({ title, subtitle }) => (
@@ -870,6 +873,7 @@ function MainApp({ initialPage }) {
           {page === 'rss-generator' && <RssGeneratorPage />}
           {page === 'watch' && <WatchPage />}
           {page === 'fact-check' && <FactCheckPage />}
+          {page === 'spaces-live' && <SpacesLivePage />}
           {page === 'config' && (
             <ConfigPage
               onFeedAdded={handleFeedAdded}
