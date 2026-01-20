@@ -81,6 +81,8 @@ export default function WatchPage() {
   const [reportAiRewrite, setReportAiRewrite] = useState(true);
   const [reportAutoEnabled, setReportAutoEnabled] = useState(false);
   const [reportAutoIntervalHours, setReportAutoIntervalHours] = useState(3);
+  const [reportActiveStart, setReportActiveStart] = useState('08:00');
+  const [reportActiveEnd, setReportActiveEnd] = useState('22:00');
   const [reportPreview, setReportPreview] = useState('');
   const [reportItems, setReportItems] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
@@ -180,6 +182,8 @@ export default function WatchPage() {
           if (Number.isFinite(Number(report.autoIntervalHours))) {
             setReportAutoIntervalHours(Math.min(24, Math.max(1, Number(report.autoIntervalHours))));
           }
+          if (typeof report.activeStart === 'string') setReportActiveStart(report.activeStart);
+          if (typeof report.activeEnd === 'string') setReportActiveEnd(report.activeEnd);
         }
       })
       .catch(() => {
@@ -403,7 +407,9 @@ export default function WatchPage() {
         useAi: reportUseAi,
         aiRewrite: reportAiRewrite,
         autoEnabled: reportAutoEnabled,
-        autoIntervalHours: reportAutoIntervalHours
+        autoIntervalHours: reportAutoIntervalHours,
+        activeStart: reportActiveStart,
+        activeEnd: reportActiveEnd
       }
     };
     if (overrides.report && typeof overrides.report === 'object') {
@@ -525,10 +531,20 @@ export default function WatchPage() {
       `Itens: ${reportMaxItems}`,
       `IA: ${reportUseAi ? 'sim' : 'nao'}`,
       `Reescrever: ${reportAiRewrite ? 'sim' : 'nao'}`,
-      `Intervalo: ${reportAutoIntervalHours}h`
+      `Intervalo: ${reportAutoIntervalHours}h`,
+      `Horario: ${reportActiveStart} - ${reportActiveEnd}`
     ].join(' | ');
     return `${base} ${details}`;
-  }, [reportAutoEnabled, reportAiRewrite, reportAutoIntervalHours, reportMaxItems, reportRange, reportUseAi]);
+  }, [
+    reportActiveEnd,
+    reportActiveStart,
+    reportAutoEnabled,
+    reportAiRewrite,
+    reportAutoIntervalHours,
+    reportMaxItems,
+    reportRange,
+    reportUseAi
+  ]);
 
   const getAlertItemId = (alert) => {
     return alert.item?.link || alert.item?.guid || alert.id;
@@ -808,6 +824,34 @@ export default function WatchPage() {
                         const value = Math.min(24, Math.max(1, Number(e.target.value) || 3));
                         setReportAutoIntervalHours(value);
                         persistSettings({ report: { autoIntervalHours: value } });
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="watch-row">
+                  <label className="feed-field">
+                    <span className="feed-label">Ativo de</span>
+                    <input
+                      className="feed-input"
+                      type="time"
+                      value={reportActiveStart}
+                      onChange={(e) => {
+                        const value = e.target.value || '08:00';
+                        setReportActiveStart(value);
+                        persistSettings({ report: { activeStart: value } });
+                      }}
+                    />
+                  </label>
+                  <label className="feed-field">
+                    <span className="feed-label">Ativo ate</span>
+                    <input
+                      className="feed-input"
+                      type="time"
+                      value={reportActiveEnd}
+                      onChange={(e) => {
+                        const value = e.target.value || '22:00';
+                        setReportActiveEnd(value);
+                        persistSettings({ report: { activeEnd: value } });
                       }}
                     />
                   </label>
