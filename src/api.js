@@ -11,6 +11,13 @@ export const apiFetch = (input, init = {}) => {
   if (!headers['Authorization']) {
     const token = localStorage.getItem('rss-auth-token')
       || sessionStorage.getItem('rss-auth-token');
+    if (!token && !runtimeToken && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const queryToken = params.get('token');
+      if (queryToken) {
+        runtimeToken = queryToken;
+      }
+    }
     const finalToken = token || runtimeToken;
     if (finalToken) headers['Authorization'] = `Bearer ${finalToken}`;
   }

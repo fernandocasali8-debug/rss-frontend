@@ -588,6 +588,19 @@ function MainApp({ initialPage }) {
     return <DisplayMode />;
   }
 
+  if (authLoading) {
+    return (
+      <div className="auth-screen">
+        <div className="auth-shell">
+          <div className="auth-card">
+            <div className="auth-card-title">Carregando...</div>
+            <div className="auth-card-subtitle">Verificando sessao.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!authLoading && authUser && authUser.approved === false) {
     return (
       <PendingApproval
@@ -597,7 +610,7 @@ function MainApp({ initialPage }) {
     );
   }
 
-  if (!authLoading && !authUser) {
+  if (!authUser) {
     return (
       <div className="auth-screen">
         <div className="auth-shell">
