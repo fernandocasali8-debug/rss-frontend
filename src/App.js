@@ -274,9 +274,15 @@ function MainApp({ initialPage }) {
       .then(res => res.json())
       .then(data => {
         setAuthUser(data?.user || null);
+        if (data?.user?.id) {
+          localStorage.setItem('rss-user-id', data.user.id);
+        } else {
+          localStorage.removeItem('rss-user-id');
+        }
       })
       .catch(() => {
         setAuthUser(null);
+        localStorage.removeItem('rss-user-id');
       })
       .finally(() => {
         setAuthLoading(false);
@@ -446,6 +452,7 @@ function MainApp({ initialPage }) {
       // ignore
     } finally {
       setAuthUser(null);
+      localStorage.removeItem('rss-user-id');
     }
   };
 
@@ -456,6 +463,7 @@ function MainApp({ initialPage }) {
       // ignore
     } finally {
       setAuthUser(null);
+      localStorage.removeItem('rss-user-id');
       const params = new URLSearchParams();
       params.set('redirect', '/app');
       window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
