@@ -110,23 +110,6 @@ const PLAN_ACCESS = {
   enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live']
 };
 
-const TrendsPlaceholder = ({ title, subtitle }) => (
-  <div className="trends-page">
-    <div className="trends-page-header">
-      <div>
-        <h2 className="trends-page-title">{title}</h2>
-        <p className="trends-page-subtitle">{subtitle}</p>
-      </div>
-    </div>
-    <div className="trends-page-meta">
-      <span>Em breve</span>
-    </div>
-    <div className="timeline-trends is-grid">
-      <div className="timeline-trends-status">Estamos preparando este m\u00F3dulo.</div>
-    </div>
-  </div>
-);
-
 const PendingApproval = ({ onLogout, userEmail }) => (
   <div className="auth-screen">
     <div className="auth-shell">
