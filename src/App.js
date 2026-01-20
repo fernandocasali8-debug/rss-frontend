@@ -10,6 +10,7 @@ import DisplayMode from './DisplayMode';
 import DashboardPage from './DashboardPage';
 import SummaryPage from './SummaryPage';
 import TrendsPage from './TrendsPage';
+import TrendsTermsPage from './TrendsTermsPage';
 import TrendsEventsPage from './TrendsEventsPage';
 import FeedRepositoryPage from './FeedRepositoryPage';
 import RssGeneratorPage from './RssGeneratorPage';
@@ -860,12 +861,7 @@ function MainApp({ initialPage }) {
           {page === 'saved' && <SavedPage />}
           {page === 'summary' && <SummaryPage />}
           {page === 'trends' && <TrendsPage />}
-          {page === 'trends-terms' && (
-            <TrendsPlaceholder
-              title="Termos Google"
-              subtitle="Colete termos em alta para ampliar o radar editorial."
-            />
-          )}
+          {page === 'trends-terms' && <TrendsTermsPage />}
           {page === 'trends-events' && <TrendsEventsPage />}
           {page === 'influencers' && <InfluencersPage />}
           {page === 'repo' && <FeedRepositoryPage />}
