@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
-import { API_BASE, apiFetch } from './api';
+import { API_BASE, apiFetch, setRuntimeToken } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
 
 import Timeline from './Timeline';
@@ -251,6 +251,7 @@ function MainApp({ initialPage }) {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     if (!token) return;
+    setRuntimeToken(token);
     localStorage.setItem('rss-auth-token', token);
     sessionStorage.setItem('rss-auth-token', token);
     params.delete('token');

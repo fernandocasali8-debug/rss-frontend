@@ -1,13 +1,18 @@
 export const API_BASE = process.env.REACT_APP_API_BASE || `${window.location.protocol}//${window.location.hostname}:4000`;
 
+let runtimeToken = '';
+
+export const setRuntimeToken = (value) => {
+  runtimeToken = value || '';
+};
+
 export const apiFetch = (input, init = {}) => {
   const headers = init.headers || {};
   if (!headers['Authorization']) {
     const token = localStorage.getItem('rss-auth-token')
       || sessionStorage.getItem('rss-auth-token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    const finalToken = token || runtimeToken;
+    if (finalToken) headers['Authorization'] = `Bearer ${finalToken}`;
   }
   if (!headers['x-user-id']) {
     const userId = localStorage.getItem('rss-user-id');
