@@ -434,6 +434,7 @@ function MainApp({ initialPage }) {
       params.set('remember', '1');
     }
     params.set('redirect', '/app');
+    params.set('prompt', 'select_account');
     window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
   };
 
@@ -462,6 +463,7 @@ function MainApp({ initialPage }) {
       localStorage.removeItem('rss-user-id');
       const params = new URLSearchParams();
       params.set('redirect', '/app');
+      params.set('prompt', 'select_account');
       window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
     }
   };
