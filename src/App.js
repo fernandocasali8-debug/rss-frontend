@@ -248,6 +248,17 @@ function MainApp({ initialPage }) {
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (!token) return;
+    localStorage.setItem('rss-auth-token', token);
+    params.delete('token');
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
@@ -435,6 +446,7 @@ function MainApp({ initialPage }) {
       // ignore
     } finally {
       setAuthUser(null);
+      localStorage.removeItem('rss-auth-token');
       localStorage.removeItem('rss-user-id');
     }
   };
@@ -446,6 +458,7 @@ function MainApp({ initialPage }) {
       // ignore
     } finally {
       setAuthUser(null);
+      localStorage.removeItem('rss-auth-token');
       localStorage.removeItem('rss-user-id');
       const params = new URLSearchParams();
       params.set('redirect', '/app');
