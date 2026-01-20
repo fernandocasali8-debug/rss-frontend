@@ -26,6 +26,99 @@ function formatTime(dateStr) {
   }).format(d);
 }
 
+function parseTimeToMinutes(value) {
+  if (!value || typeof value !== 'string') return null;
+  const parts = value.split(':');
+  if (parts.length < 2) return null;
+  const hour = Number(parts[0]);
+  const minute = Number(parts[1]);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return Math.max(0, Math.min(23, hour)) * 60 + Math.max(0, Math.min(59, minute));
+}
+
+function buildReportSchedulePreview(startValue, endValue, intervalHours, maxItems) {
+  const startMinutes = parseTimeToMinutes(startValue);
+  const endMinutes = parseTimeToMinutes(endValue);
+  if (startMinutes == null || endMinutes == null) return [];
+  const intervalMinutes = Math.max(1, Number(intervalHours) || 1) * 60;
+  const spanMinutes = startMinutes <= endMinutes
+    ? endMinutes - startMinutes
+    : (1440 - startMinutes + endMinutes);
+  if (spanMinutes <= 0) return [];
+
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  const inWindow = (date) => {
+    const minutes = date.getHours() * 60 + date.getMinutes();
+    if (startMinutes <= endMinutes) {
+      return minutes >= startMinutes && minutes <= endMinutes;
+    }
+    return minutes >= startMinutes || minutes <= endMinutes;
+  };
+
+  const resolveWindowStart = () => {
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const base = new Date(today);
+    if (startMinutes <= endMinutes) {
+      const start = new Date(base);
+      start.setMinutes(startMinutes);
+      const end = new Date(base);
+      end.setMinutes(endMinutes);
+      if (now < start) return start;
+      if (now > end) {
+        const next = new Date(start);
+        next.setDate(next.getDate() + 1);
+        return next;
+      }
+      return start;
+    }
+    if (inWindow(now)) {
+      if (minutes <= endMinutes) {
+        const start = new Date(base);
+        start.setDate(start.getDate() - 1);
+        start.setMinutes(startMinutes);
+        return start;
+      }
+      const start = new Date(base);
+      start.setMinutes(startMinutes);
+      return start;
+    }
+    if (minutes < startMinutes) {
+      const start = new Date(base);
+      start.setMinutes(startMinutes);
+      return start;
+    }
+    const start = new Date(base);
+    start.setDate(start.getDate() + 1);
+    start.setMinutes(startMinutes);
+    return start;
+  };
+
+  const schedule = [];
+  let windowStart = resolveWindowStart();
+  let windowEnd = new Date(windowStart.getTime() + spanMinutes * 60 * 1000);
+  let offset = Math.ceil((now.getTime() - windowStart.getTime()) / (intervalMinutes * 60 * 1000));
+  if (offset < 0) offset = 0;
+  let cursor = new Date(windowStart.getTime() + offset * intervalMinutes * 60 * 1000);
+
+  while (schedule.length < (maxItems || 6)) {
+    if (cursor > windowEnd) {
+      windowStart = new Date(windowStart.getTime() + 24 * 60 * 60 * 1000);
+      windowEnd = new Date(windowStart.getTime() + spanMinutes * 60 * 1000);
+      cursor = new Date(windowStart);
+      continue;
+    }
+    if (cursor >= now) {
+      schedule.push(new Date(cursor));
+    }
+    cursor = new Date(cursor.getTime() + intervalMinutes * 60 * 1000);
+  }
+
+  return schedule;
+}
+
 function formatRelativeTime(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -87,6 +180,8 @@ export default function WatchPage() {
   const [reportItems, setReportItems] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+  const [reportLogs, setReportLogs] = useState([]);
+  const [reportLogsLoading, setReportLogsLoading] = useState(false);
   const [reportSavedAt, setReportSavedAt] = useState('');
   const [reportSaveError, setReportSaveError] = useState('');
   const dropdownRef = useRef(null);
@@ -95,6 +190,9 @@ export default function WatchPage() {
   const alertsRef = useRef([]);
   const newAlertIdsRef = useRef(new Set());
 
+  useEffect(() => {
+    fetchReportLogs();
+  }, []);
   useEffect(() => {
     const storedView = localStorage.getItem(WATCH_VIEW_KEY);
     if (storedView === 'list' || storedView === 'grid' || storedView === 'compact') {
@@ -478,6 +576,21 @@ export default function WatchPage() {
     persistSettings({ recencyWeight: safe });
   };
 
+  const fetchReportLogs = async () => {
+    setReportLogsLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/watch/report/logs`);
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.logs)) {
+        setReportLogs(data.logs);
+      }
+    } catch (err) {
+      // ignore
+    } finally {
+      setReportLogsLoading(false);
+    }
+  };
+
   const handleReportPreview = async () => {
     setReportLoading(true);
     setReportMessage('');
@@ -492,6 +605,7 @@ export default function WatchPage() {
       }
       setReportPreview(data.report || '');
       setReportItems(Array.isArray(data.items) ? data.items : []);
+      fetchReportLogs();
     } catch (err) {
       setReportMessage('Falha ao gerar relatorio.');
     } finally {
@@ -521,6 +635,7 @@ export default function WatchPage() {
       setReportPreview(data.report || '');
       setReportItems(Array.isArray(data.items) ? data.items : []);
       setReportMessage('Relatorio publicado no X.');
+      fetchReportLogs();
     } catch (err) {
       setReportMessage('Falha ao publicar relatorio.');
     } finally {
@@ -553,6 +668,15 @@ export default function WatchPage() {
     reportRange,
     reportUseAi
   ]);
+
+  const reportSchedule = useMemo(() => {
+    return buildReportSchedulePreview(
+      reportActiveStart,
+      reportActiveEnd,
+      reportAutoIntervalHours,
+      6
+    );
+  }, [reportActiveEnd, reportActiveStart, reportAutoIntervalHours]);
 
   const getAlertItemId = (alert) => {
     return alert.item?.link || alert.item?.guid || alert.id;
@@ -867,6 +991,22 @@ export default function WatchPage() {
                 <div className="watch-report-status">
                   {reportStatusLabel}
                 </div>
+                <div className="watch-report-schedule">
+                  <div className="watch-report-title">Cronograma previsto</div>
+                  {reportSchedule.length === 0 ? (
+                    <div className="watch-report-status">
+                      Defina horario e intervalo para ver o cronograma.
+                    </div>
+                  ) : (
+                    <ul className="watch-report-log-list">
+                      {reportSchedule.map((time, index) => (
+                        <li key={`${time.toISOString()}-${index}`}>
+                          {formatTime(time.toISOString())}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 {(reportSavedAt || reportSaveError) && (
                   <div className={`watch-report-status ${reportSaveError ? 'is-error' : ''}`}>
                     {reportSaveError ? reportSaveError : `Configuracao salva em ${formatTime(reportSavedAt)}.`}
@@ -904,6 +1044,30 @@ export default function WatchPage() {
                       {reportItems.map((item, index) => (
                         <li key={`${item.link || item.title}-${index}`}>
                           {item.title || 'Sem titulo'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {reportLogsLoading && (
+                  <div className="watch-report-status">
+                    Carregando log da automatizacao...
+                  </div>
+                )}
+                {!reportLogsLoading && reportLogs.length > 0 && (
+                  <div className="watch-report-logs">
+                    <div className="watch-report-title">Log da automatizacao</div>
+                    <ul className="watch-report-log-list">
+                      {reportLogs.slice(0, 15).map((logItem) => (
+                        <li key={logItem.id || logItem.timestamp}>
+                          <div className="watch-report-log-line">
+                            {formatTime(logItem.timestamp)} - {logItem.message || logItem.action}
+                          </div>
+                          {logItem.detail ? (
+                            <div className="watch-report-log-detail">
+                              {logItem.detail}
+                            </div>
+                          ) : null}
                         </li>
                       ))}
                     </ul>
