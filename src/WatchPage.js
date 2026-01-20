@@ -87,6 +87,8 @@ export default function WatchPage() {
   const [reportItems, setReportItems] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+  const [reportSavedAt, setReportSavedAt] = useState('');
+  const [reportSaveError, setReportSaveError] = useState('');
   const dropdownRef = useRef(null);
   const lastCheckRef = useRef(null);
   const alertIdsRef = useRef(new Set());
@@ -423,9 +425,15 @@ export default function WatchPage() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buildSettingsPayload(next))
-    }).catch(() => {
-      // ignore
-    });
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Falha ao salvar configuracao.');
+        setReportSavedAt(new Date().toISOString());
+        setReportSaveError('');
+      })
+      .catch(() => {
+        setReportSaveError('Falha ao salvar configuracao.');
+      });
   };
 
   const handleViewMode = (mode) => {
@@ -859,6 +867,11 @@ export default function WatchPage() {
                 <div className="watch-report-status">
                   {reportStatusLabel}
                 </div>
+                {(reportSavedAt || reportSaveError) && (
+                  <div className={`watch-report-status ${reportSaveError ? 'is-error' : ''}`}>
+                    {reportSaveError ? reportSaveError : `Configuracao salva em ${formatTime(reportSavedAt)}.`}
+                  </div>
+                )}
                 <div className="watch-report-actions">
                   <button
                     type="button"
