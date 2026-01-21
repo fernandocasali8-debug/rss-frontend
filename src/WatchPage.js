@@ -36,6 +36,31 @@ function parseTimeToMinutes(value) {
   return Math.max(0, Math.min(23, hour)) * 60 + Math.max(0, Math.min(59, minute));
 }
 
+function getSaoPauloNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(new Date());
+  const map = parts.reduce((acc, part) => {
+    if (part.type !== 'literal') acc[part.type] = part.value;
+    return acc;
+  }, {});
+  return new Date(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+    Number(map.hour),
+    Number(map.minute),
+    Number(map.second || 0)
+  );
+}
+
 function buildReportSchedulePreview(startValue, endValue, intervalMinutes, maxItems) {
   const startMinutes = parseTimeToMinutes(startValue);
   const endMinutes = parseTimeToMinutes(endValue);
@@ -46,7 +71,7 @@ function buildReportSchedulePreview(startValue, endValue, intervalMinutes, maxIt
     : (1440 - startMinutes + endMinutes);
   if (spanMinutes <= 0) return [];
 
-  const now = new Date();
+  const now = getSaoPauloNow();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
