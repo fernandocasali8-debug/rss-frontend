@@ -36,11 +36,11 @@ function parseTimeToMinutes(value) {
   return Math.max(0, Math.min(23, hour)) * 60 + Math.max(0, Math.min(59, minute));
 }
 
-function buildReportSchedulePreview(startValue, endValue, intervalHours, maxItems) {
+function buildReportSchedulePreview(startValue, endValue, intervalMinutes, maxItems) {
   const startMinutes = parseTimeToMinutes(startValue);
   const endMinutes = parseTimeToMinutes(endValue);
   if (startMinutes == null || endMinutes == null) return [];
-  const intervalMinutes = Math.max(1, Number(intervalHours) || 1) * 60;
+  const stepMinutes = Math.max(1, Number(intervalMinutes) || 1);
   const spanMinutes = startMinutes <= endMinutes
     ? endMinutes - startMinutes
     : (1440 - startMinutes + endMinutes);
@@ -99,9 +99,9 @@ function buildReportSchedulePreview(startValue, endValue, intervalHours, maxItem
   const schedule = [];
   let windowStart = resolveWindowStart();
   let windowEnd = new Date(windowStart.getTime() + spanMinutes * 60 * 1000);
-  let offset = Math.ceil((now.getTime() - windowStart.getTime()) / (intervalMinutes * 60 * 1000));
+  let offset = Math.ceil((now.getTime() - windowStart.getTime()) / (stepMinutes * 60 * 1000));
   if (offset < 0) offset = 0;
-  let cursor = new Date(windowStart.getTime() + offset * intervalMinutes * 60 * 1000);
+  let cursor = new Date(windowStart.getTime() + offset * stepMinutes * 60 * 1000);
 
   while (schedule.length < (maxItems || 6)) {
     if (cursor > windowEnd) {
@@ -113,7 +113,7 @@ function buildReportSchedulePreview(startValue, endValue, intervalHours, maxItem
     if (cursor >= now) {
       schedule.push(new Date(cursor));
     }
-    cursor = new Date(cursor.getTime() + intervalMinutes * 60 * 1000);
+    cursor = new Date(cursor.getTime() + stepMinutes * 60 * 1000);
   }
 
   return schedule;
