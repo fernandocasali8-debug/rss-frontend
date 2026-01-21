@@ -173,7 +173,7 @@ export default function WatchPage() {
   const [reportUseAi, setReportUseAi] = useState(true);
   const [reportAiRewrite, setReportAiRewrite] = useState(true);
   const [reportAutoEnabled, setReportAutoEnabled] = useState(false);
-  const [reportAutoIntervalHours, setReportAutoIntervalHours] = useState(3);
+  const [reportAutoIntervalMinutes, setReportAutoIntervalMinutes] = useState(60);
   const [reportActiveStart, setReportActiveStart] = useState('08:00');
   const [reportActiveEnd, setReportActiveEnd] = useState('22:00');
   const [reportPreview, setReportPreview] = useState('');
@@ -279,8 +279,12 @@ export default function WatchPage() {
           if (typeof report.useAi === 'boolean') setReportUseAi(report.useAi);
           if (typeof report.aiRewrite === 'boolean') setReportAiRewrite(report.aiRewrite);
           if (typeof report.autoEnabled === 'boolean') setReportAutoEnabled(report.autoEnabled);
-          if (Number.isFinite(Number(report.autoIntervalHours))) {
-            setReportAutoIntervalHours(Math.min(24, Math.max(1, Number(report.autoIntervalHours))));
+          const autoMinutes = Number(report.autoIntervalMinutes);
+          if (Number.isFinite(autoMinutes)) {
+            setReportAutoIntervalMinutes(Math.min(360, Math.max(1, autoMinutes)));
+          } else if (Number.isFinite(Number(report.autoIntervalHours))) {
+            const minutes = Number(report.autoIntervalHours) * 60;
+            setReportAutoIntervalMinutes(Math.min(360, Math.max(1, minutes)));
           }
           if (typeof report.activeStart === 'string') setReportActiveStart(report.activeStart);
           if (typeof report.activeEnd === 'string') setReportActiveEnd(report.activeEnd);
@@ -507,7 +511,7 @@ export default function WatchPage() {
         useAi: reportUseAi,
         aiRewrite: reportAiRewrite,
         autoEnabled: reportAutoEnabled,
-        autoIntervalHours: reportAutoIntervalHours,
+        autoIntervalMinutes: reportAutoIntervalMinutes,
         activeStart: reportActiveStart,
         activeEnd: reportActiveEnd
       }
@@ -624,7 +628,8 @@ export default function WatchPage() {
           range: reportRange,
           maxItems: reportMaxItems,
           useAi: reportUseAi,
-          aiRewrite: reportAiRewrite
+          aiRewrite: reportAiRewrite,
+          autoIntervalMinutes: reportAutoIntervalMinutes
         })
       });
       const data = await res.json();
@@ -654,7 +659,7 @@ export default function WatchPage() {
       `Itens: ${reportMaxItems}`,
       `IA: ${reportUseAi ? 'sim' : 'nao'}`,
       `Reescrever: ${reportAiRewrite ? 'sim' : 'nao'}`,
-      `Intervalo: ${reportAutoIntervalHours}h`,
+      `Intervalo: ${reportAutoIntervalMinutes} min`,
       `Horario: ${reportActiveStart} - ${reportActiveEnd}`
     ].join(' | ');
     return `${base} ${details}`;
@@ -663,7 +668,7 @@ export default function WatchPage() {
     reportActiveStart,
     reportAutoEnabled,
     reportAiRewrite,
-    reportAutoIntervalHours,
+    reportAutoIntervalMinutes,
     reportMaxItems,
     reportRange,
     reportUseAi
@@ -673,10 +678,10 @@ export default function WatchPage() {
     return buildReportSchedulePreview(
       reportActiveStart,
       reportActiveEnd,
-      reportAutoIntervalHours,
+      reportAutoIntervalMinutes,
       6
     );
-  }, [reportActiveEnd, reportActiveStart, reportAutoIntervalHours]);
+  }, [reportActiveEnd, reportActiveStart, reportAutoIntervalMinutes]);
 
   const getAlertItemId = (alert) => {
     return alert.item?.link || alert.item?.guid || alert.id;
@@ -945,17 +950,17 @@ export default function WatchPage() {
                     <span>Automatizar no X</span>
                   </label>
                   <label className="feed-field">
-                    <span className="feed-label">Intervalo (horas)</span>
+                    <span className="feed-label">Intervalo (minutos)</span>
                     <input
                       className="feed-input"
                       type="number"
                       min="1"
-                      max="24"
-                      value={reportAutoIntervalHours}
+                      max="360"
+                      value={reportAutoIntervalMinutes}
                       onChange={(e) => {
-                        const value = Math.min(24, Math.max(1, Number(e.target.value) || 3));
-                        setReportAutoIntervalHours(value);
-                        persistSettings({ report: { autoIntervalHours: value } });
+                        const value = Math.min(360, Math.max(1, Number(e.target.value) || 60));
+                        setReportAutoIntervalMinutes(value);
+                        persistSettings({ report: { autoIntervalMinutes: value } });
                       }}
                     />
                   </label>
