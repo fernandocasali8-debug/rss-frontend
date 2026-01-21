@@ -207,6 +207,7 @@ export default function WatchPage() {
   const [reportMessage, setReportMessage] = useState('');
   const [reportLogs, setReportLogs] = useState([]);
   const [reportLogsLoading, setReportLogsLoading] = useState(false);
+  const [reportState, setReportState] = useState(null);
   const [reportSavedAt, setReportSavedAt] = useState('');
   const [reportSaveError, setReportSaveError] = useState('');
   const dropdownRef = useRef(null);
@@ -612,6 +613,9 @@ export default function WatchPage() {
       const data = await res.json();
       if (data && data.ok && Array.isArray(data.logs)) {
         setReportLogs(data.logs);
+      }
+      if (data && data.ok && data.state) {
+        setReportState(data.state);
       }
     } catch (err) {
       // ignore
@@ -1021,6 +1025,28 @@ export default function WatchPage() {
                 <div className="watch-report-status">
                   {reportStatusLabel}
                 </div>
+                {reportState && (
+                  <div className="watch-report-status">
+                    <div>
+                      Proxima postagem (backend): {reportState.nextRunAt ? formatTime(reportState.nextRunAt) : 'Nao agendada'}
+                    </div>
+                    {reportState.rateLimitUntil && (
+                      <div>
+                        Em espera ate: {formatTime(reportState.rateLimitUntil)}
+                      </div>
+                    )}
+                    {reportState.lastAutoPostAt && (
+                      <div>
+                        Ultimo post automatico: {formatTime(reportState.lastAutoPostAt)}
+                      </div>
+                    )}
+                    {reportState.lastAutoAttemptAt && (
+                      <div>
+                        Ultima tentativa automatica: {formatTime(reportState.lastAutoAttemptAt)}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="watch-report-schedule">
                   <div className="watch-report-title">Cronograma previsto</div>
                   {reportSchedule.length === 0 ? (
