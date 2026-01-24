@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import './Timeline.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -132,6 +132,8 @@ export default function Timeline() {
   const [aiTagLoading, setAiTagLoading] = useState(false);
   const [aiTagError, setAiTagError] = useState('');
   const [aiAutoTruncate, setAiAutoTruncate] = useState(true);
+  const [aiIncludeEmojis, setAiIncludeEmojis] = useState(false);
+  const [aiIncludeTitle, setAiIncludeTitle] = useState(false);
   const [aiFixedTags, setAiFixedTags] = useState('');
   const [aiTags, setAiTags] = useState([]);
   const [aiImageQuery, setAiImageQuery] = useState('');
@@ -229,6 +231,8 @@ export default function Timeline() {
     setAiTagLoading(false);
     setAiTagError('');
     setAiAutoTruncate(true);
+    setAiIncludeEmojis(false);
+    setAiIncludeTitle(false);
     setAiFixedTags('');
     setAiTags([]);
     setAiImageQuery('');
@@ -284,14 +288,14 @@ export default function Timeline() {
       const stopwords = new Set([
         'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na',
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sobre', 'que', 'e', 'ou', 'se', 'ao', 'aos', 'ao', 'a',
-        'nao', 'não', 'mais', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'ja', 'já', 'ser', 'sao', 'são',
-        'foi', 'era', 'está', 'esta', 'estao', 'estão', 'tem', 'têm', 'ter', 'vai', 'vao', 'vão', 'como'
+        'nao', 'nÃ£o', 'mais', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'ja', 'jÃ¡', 'ser', 'sao', 'sÃ£o',
+        'foi', 'era', 'estÃ¡', 'esta', 'estao', 'estÃ£o', 'tem', 'tÃªm', 'ter', 'vai', 'vao', 'vÃ£o', 'como'
       ]);
       const words = baseText
         .toLowerCase()
         .replace(/https?:\/\/\S+/g, '')
         .replace(/[#@]/g, '')
-        .split(/[^a-zA-Z0-9À-ſ]+/u)
+        .split(/[^a-zA-Z0-9Ã€-Å¿]+/u)
         .filter(word => word.length >= 4 && !stopwords.has(word));
       for (const word of words) {
         const clean = word.replace(/\s+/g, '');
@@ -356,7 +360,9 @@ export default function Timeline() {
           contentSnippet: item.contentSnippet || '',
           link: item.link || '',
           feedName: item.feedName || '',
-          mode
+          mode,
+          includeEmojis: aiIncludeEmojis,
+          includeTitle: aiIncludeTitle
         })
       });
       const data = await res.json();
@@ -374,7 +380,7 @@ export default function Timeline() {
       setAiLoading(false);
       setAiLoadingId(null);
     }
-  }, [applyAutoTagsToDraft, flashMessage, getItemTags]);
+  }, [aiIncludeEmojis, aiIncludeTitle, applyAutoTagsToDraft, flashMessage, getItemTags]);
 
   const buildSocialText = React.useCallback((text, tags, useTags, useDetectTags, tagCount, fixedTags, useTruncate) => {
     let composed = text || '';
@@ -799,7 +805,7 @@ export default function Timeline() {
       await navigator.clipboard.writeText(item.link);
       flashMessage('Link copiado.');
     } catch (err) {
-      flashMessage('Não foi possível copiar o link.');
+      flashMessage('NÃ£o foi possÃ­vel copiar o link.');
     }
   }, [flashMessage]);
 
@@ -808,7 +814,7 @@ export default function Timeline() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: item.title || 'Notícia',
+          title: item.title || 'NotÃ­cia',
           text: item.title || '',
           url: item.link
         });
@@ -916,7 +922,7 @@ export default function Timeline() {
             {item.contentSnippet && <div className="timeline-snippet">{item.contentSnippet}</div>}
             {item.sources && item.sources.length > 0 && (
               <div className="timeline-sources">
-                <span className="timeline-sources-label">Também em:</span>
+                <span className="timeline-sources-label">TambÃ©m em:</span>
                 {item.sources.map((source, sourceIdx) => (
                   <a
                     key={`${source.feedName}-${sourceIdx}`}
@@ -1156,8 +1162,8 @@ export default function Timeline() {
       <div className="timeline-container">
         <div className="timeline-header">
           <div>
-            <h2>Todas as notícias dos feeds</h2>
-            <div className="timeline-refresh">Próxima atualização em {formatCountdown(countdown)}</div>
+            <h2>Todas as notÃ­cias dos feeds</h2>
+            <div className="timeline-refresh">PrÃ³xima atualizaÃ§Ã£o em {formatCountdown(countdown)}</div>
           </div>
         </div>
         <div className="timeline-search">
@@ -1251,7 +1257,7 @@ export default function Timeline() {
             <div className="event-modal-header">
               <h3>Reescrita jornalistica</h3>
               <button className="event-close" onClick={closeAiModal} aria-label="Fechar">
-                {'×'}
+                {'Ã—'}
               </button>
             </div>
             <div className="event-modal-body">
@@ -1526,7 +1532,7 @@ export default function Timeline() {
             <div className="event-modal-header">
               <h3>Etiquetas manuais</h3>
               <button className="event-close" onClick={() => setTagModalItem(null)} aria-label="Fechar">
-                {'×'}
+                {'Ã—'}
               </button>
             </div>
             <div className="event-modal-body">
@@ -1535,7 +1541,7 @@ export default function Timeline() {
                 <div className="timeline-ai-title">{tagModalItem.title}</div>
               </div>
               <label className="timeline-tag-label">
-                Tags (separadas por vírgula)
+                Tags (separadas por vÃ­rgula)
                 <input
                   className="timeline-tag-input"
                   type="text"
@@ -1673,13 +1679,14 @@ export default function Timeline() {
               <span className="timeline-notif-title">{n.title}</span>
               <span className="timeline-notif-hour">{n.hour}</span>
             </a>
-            <button className="timeline-notif-close" onClick={() => handleCloseNotif(i)} title="Fechar notificação">x</button>
+            <button className="timeline-notif-close" onClick={() => handleCloseNotif(i)} title="Fechar notificaÃ§Ã£o">x</button>
           </div>
         ))}
       </div>
     </>
   );
 }
+
 
 
 
