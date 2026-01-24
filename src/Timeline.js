@@ -295,7 +295,7 @@ export default function Timeline() {
         .toLowerCase()
         .replace(/https?:\/\/\S+/g, '')
         .replace(/[#@]/g, '')
-        .split(/[^a-zA-Z0-9Ã€-Å¿]+/u)
+        .split(/[^\\p{L}\\p{N}]+/u)
         .filter(word => word.length >= 4 && !stopwords.has(word));
       for (const word of words) {
         const clean = word.replace(/\s+/g, '');
@@ -1686,6 +1686,7 @@ export default function Timeline() {
     </>
   );
 }
+
 
 
 
