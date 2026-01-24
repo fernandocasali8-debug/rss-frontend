@@ -288,8 +288,8 @@ export default function Timeline() {
       const stopwords = new Set([
         'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na',
         'nos', 'nas', 'por', 'para', 'com', 'sem', 'sobre', 'que', 'e', 'ou', 'se', 'ao', 'aos', 'ao', 'a',
-        'nao', 'nÃ£o', 'mais', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'ja', 'jÃ¡', 'ser', 'sao', 'sÃ£o',
-        'foi', 'era', 'estÃ¡', 'esta', 'estao', 'estÃ£o', 'tem', 'tÃªm', 'ter', 'vai', 'vao', 'vÃ£o', 'como'
+        'nao', 'nÃƒÂ£o', 'mais', 'menos', 'muito', 'muita', 'muitos', 'muitas', 'ja', 'jÃƒÂ¡', 'ser', 'sao', 'sÃƒÂ£o',
+        'foi', 'era', 'estÃƒÂ¡', 'esta', 'estao', 'estÃƒÂ£o', 'tem', 'tÃƒÂªm', 'ter', 'vai', 'vao', 'vÃƒÂ£o', 'como'
       ]);
       const words = baseText
         .toLowerCase()
@@ -805,7 +805,7 @@ export default function Timeline() {
       await navigator.clipboard.writeText(item.link);
       flashMessage('Link copiado.');
     } catch (err) {
-      flashMessage('NÃ£o foi possÃ­vel copiar o link.');
+      flashMessage('NÃƒÂ£o foi possÃƒÂ­vel copiar o link.');
     }
   }, [flashMessage]);
 
@@ -814,7 +814,7 @@ export default function Timeline() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: item.title || 'NotÃ­cia',
+          title: item.title || 'NotÃƒÂ­cia',
           text: item.title || '',
           url: item.link
         });
@@ -922,7 +922,7 @@ export default function Timeline() {
             {item.contentSnippet && <div className="timeline-snippet">{item.contentSnippet}</div>}
             {item.sources && item.sources.length > 0 && (
               <div className="timeline-sources">
-                <span className="timeline-sources-label">TambÃ©m em:</span>
+                <span className="timeline-sources-label">TambÃƒÂ©m em:</span>
                 {item.sources.map((source, sourceIdx) => (
                   <a
                     key={`${source.feedName}-${sourceIdx}`}
@@ -1162,8 +1162,8 @@ export default function Timeline() {
       <div className="timeline-container">
         <div className="timeline-header">
           <div>
-            <h2>Todas as notÃ­cias dos feeds</h2>
-            <div className="timeline-refresh">PrÃ³xima atualizaÃ§Ã£o em {formatCountdown(countdown)}</div>
+            <h2>Todas as notÃƒÂ­cias dos feeds</h2>
+            <div className="timeline-refresh">PrÃƒÂ³xima atualizaÃƒÂ§ÃƒÂ£o em {formatCountdown(countdown)}</div>
           </div>
         </div>
         <div className="timeline-search">
@@ -1257,7 +1257,7 @@ export default function Timeline() {
             <div className="event-modal-header">
               <h3>Reescrita jornalistica</h3>
               <button className="event-close" onClick={closeAiModal} aria-label="Fechar">
-                {'Ã—'}
+                {'Ãƒâ€”'}
               </button>
             </div>
             <div className="event-modal-body">
@@ -1532,7 +1532,7 @@ export default function Timeline() {
             <div className="event-modal-header">
               <h3>Etiquetas manuais</h3>
               <button className="event-close" onClick={() => setTagModalItem(null)} aria-label="Fechar">
-                {'Ã—'}
+                {'Ãƒâ€”'}
               </button>
             </div>
             <div className="event-modal-body">
@@ -1541,7 +1541,7 @@ export default function Timeline() {
                 <div className="timeline-ai-title">{tagModalItem.title}</div>
               </div>
               <label className="timeline-tag-label">
-                Tags (separadas por vÃ­rgula)
+                Tags (separadas por vÃƒÂ­rgula)
                 <input
                   className="timeline-tag-input"
                   type="text"
@@ -1679,13 +1679,14 @@ export default function Timeline() {
               <span className="timeline-notif-title">{n.title}</span>
               <span className="timeline-notif-hour">{n.hour}</span>
             </a>
-            <button className="timeline-notif-close" onClick={() => handleCloseNotif(i)} title="Fechar notificaÃ§Ã£o">x</button>
+            <button className="timeline-notif-close" onClick={() => handleCloseNotif(i)} title="Fechar notificaÃƒÂ§ÃƒÂ£o">x</button>
           </div>
         ))}
       </div>
     </>
   );
 }
+
 
 
 
