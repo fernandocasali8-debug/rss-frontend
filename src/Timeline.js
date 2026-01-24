@@ -315,6 +315,33 @@ export default function Timeline() {
     return collected.slice(0, maxTags);
   };
 
+  const normalizeAiTitle = React.useCallback((value) => {
+    return String(value || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }, []);
+
+  const applyTitlePreference = React.useCallback((text, title, includeTitle) => {
+    if (!text) return text;
+    const normalizedTitle = normalizeAiTitle(title);
+    if (!normalizedTitle) return text;
+    if (includeTitle) {
+      const normalizedText = normalizeAiTitle(text);
+      if (normalizedText.startsWith(normalizedTitle)) return text;
+      return `${title}\n\n${text}`.trim();
+    }
+    const lines = String(text).split(/\r?\n/);
+    if (!lines.length) return text;
+    if (normalizeAiTitle(lines[0]) !== normalizedTitle) return text;
+    let rest = lines.slice(1);
+    while (rest.length && !rest[0].trim()) {
+      rest = rest.slice(1);
+    }
+    return rest.join('\n').trim();
+  }, [normalizeAiTitle]);
+
   const applyAutoTagsToDraft = React.useCallback((text) => {
     if (!text) return text;
     if (!aiAutoTags && !aiAutoDetectTags) return text;
@@ -371,8 +398,9 @@ export default function Timeline() {
         throw new Error(message);
       }
       const text = data.text || '';
-      setAiText(text);
-      setAiDraft(applyAutoTagsToDraft(text));
+      const withTitle = applyTitlePreference(text, item.title || '', aiIncludeTitle);
+      setAiText(withTitle);
+      setAiDraft(applyAutoTagsToDraft(withTitle));
     } catch (err) {
       setAiError(err.message || 'Falha ao gerar texto.');
       flashMessage(err.message || 'Falha ao gerar texto.');
@@ -380,7 +408,7 @@ export default function Timeline() {
       setAiLoading(false);
       setAiLoadingId(null);
     }
-  }, [aiIncludeEmojis, aiIncludeTitle, applyAutoTagsToDraft, flashMessage, getItemTags]);
+  }, [aiIncludeEmojis, aiIncludeTitle, applyAutoTagsToDraft, applyTitlePreference, flashMessage, getItemTags]);
 
   const buildSocialText = React.useCallback((text, tags, useTags, useDetectTags, tagCount, fixedTags, useTruncate) => {
     let composed = text || '';
@@ -420,6 +448,14 @@ export default function Timeline() {
     }, 150);
     return () => clearTimeout(timer);
   }, [aiDraft, aiModalItem]);
+
+  useEffect(() => {
+    if (!aiModalItem || !aiDraft) return;
+    const updated = applyTitlePreference(aiDraft, aiModalItem.title || '', aiIncludeTitle);
+    if (updated !== aiDraft) {
+      setAiDraft(updated);
+    }
+  }, [aiIncludeTitle, aiModalItem, aiDraft, applyTitlePreference]);
 
   useEffect(() => {
     if (!aiModalItem) return;
