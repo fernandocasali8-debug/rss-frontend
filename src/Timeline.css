@@ -585,6 +585,43 @@
   color: var(--muted);
 }
 
+.timeline-ai-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.timeline-ai-section-title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.timeline-ai-section-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.timeline-ai-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 14px;
+}
+
+.timeline-ai-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.timeline-ai-text-section {
+  background: var(--surface);
+}
+
 .timeline-ai-options {
   display: flex;
   flex-direction: column;

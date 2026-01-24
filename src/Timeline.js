@@ -1257,7 +1257,7 @@ export default function Timeline() {
             <div className="event-modal-header">
               <h3>Reescrita jornalistica</h3>
               <button className="event-close" onClick={closeAiModal} aria-label="Fechar">
-                {'Ãƒâ€”'}
+                x
               </button>
             </div>
             <div className="event-modal-body">
@@ -1292,104 +1292,136 @@ export default function Timeline() {
                       </button>
                     )}
                   </div>
-                  <div className="timeline-ai-options">
-                <label className="timeline-ai-toggle">
-                  <input
-                    type="checkbox"
-                    checked={aiAutoTags}
-                    onChange={(e) => setAiAutoTags(e.target.checked)}
-                  />
-                  Adicionar hashtags do feed automaticamente
-                </label>
-                <label className="timeline-ai-toggle">
-                  <input
-                    type="checkbox"
-                    checked={aiAutoDetectTags}
-                    onChange={(e) => setAiAutoDetectTags(e.target.checked)}
-                  />
-                  Identificar hashtags automaticamente (do texto)
-                </label>
-                <label className="timeline-ai-fixed">
-                  Quantidade de hashtags automaticas (1 a 5)
-                  <input
-                    className="timeline-ai-input"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={aiTagCount}
-                    onChange={(e) => setAiTagCount(Number(e.target.value))}
-                  />
-                </label>
-                <label className="timeline-ai-fixed">
-                  Gerar hashtags
-                  <div className="timeline-ai-hashtags-row">
-                    <select
-                      className="timeline-ai-input"
-                      value={aiTagSource}
-                      onChange={(e) => setAiTagSource(e.target.value)}
-                    >
-                      <option value="local">Sem IA (local)</option>
-                      <option value="ai">Com IA (semantico)</option>
-                    </select>
-                    <button
-                      className="timeline-ai-chip"
-                      type="button"
-                      onClick={handleGenerateHashtags}
-                      disabled={aiTagLoading}
-                    >
-                      {aiTagLoading ? 'Gerando...' : 'Gerar hashtags'}
-                    </button>
-                  </div>
-                  {aiTagError && <div className="timeline-ai-error">{aiTagError}</div>}
-                  {aiSuggestedTags.length > 0 && (
-                    <div className="timeline-ai-suggested">
-                      <div className="timeline-ai-suggested-list">
-                        {aiSuggestedTags.map(tag => (
-                          <span key={tag} className="timeline-ai-suggested-chip">#{tag}</span>
-                        ))}
-                      </div>
-                      <button
-                        className="timeline-ai-chip"
-                        type="button"
-                        onClick={handleUseSuggestedTags}
-                      >
-                        Usar sugeridas
-                      </button>
+                  <div className="timeline-ai-section">
+                    <div className="timeline-ai-section-title">Opcoes de estilo</div>
+                    <div className="timeline-ai-toggle-grid">
+                      <label className="timeline-ai-toggle">
+                        <input
+                          type="checkbox"
+                          checked={aiIncludeTitle}
+                          onChange={(e) => setAiIncludeTitle(e.target.checked)}
+                        />
+                        Incluir titulo no texto
+                      </label>
+                      <label className="timeline-ai-toggle">
+                        <input
+                          type="checkbox"
+                          checked={aiIncludeEmojis}
+                          onChange={(e) => setAiIncludeEmojis(e.target.checked)}
+                        />
+                        Permitir emojis
+                      </label>
+                      <label className="timeline-ai-toggle">
+                        <input
+                          type="checkbox"
+                          checked={aiAutoTruncate}
+                          onChange={(e) => setAiAutoTruncate(e.target.checked)}
+                        />
+                        Truncar automaticamente em 280 caracteres
+                      </label>
                     </div>
-                  )}
-                </label>
-                <label className="timeline-ai-fixed">
-                  Hashtags fixas (separadas por virgula)
-                  <input
-                    className="timeline-ai-input"
-                    type="text"
+                    <div className="timeline-ai-section-note">
+                      Ajuste as opcoes e clique em "Regerar" para aplicar.
+                    </div>
+                  </div>
+                  <div className="timeline-ai-section">
+                    <div className="timeline-ai-section-title">Hashtags</div>
+                    <div className="timeline-ai-toggle-grid">
+                      <label className="timeline-ai-toggle">
+                        <input
+                          type="checkbox"
+                          checked={aiAutoTags}
+                          onChange={(e) => setAiAutoTags(e.target.checked)}
+                        />
+                        Adicionar hashtags do feed automaticamente
+                      </label>
+                      <label className="timeline-ai-toggle">
+                        <input
+                          type="checkbox"
+                          checked={aiAutoDetectTags}
+                          onChange={(e) => setAiAutoDetectTags(e.target.checked)}
+                        />
+                        Identificar hashtags automaticamente (do texto)
+                      </label>
+                    </div>
+                    <div className="timeline-ai-row">
+                      <label className="timeline-ai-fixed">
+                        Quantidade de hashtags automaticas (1 a 5)
+                        <input
+                          className="timeline-ai-input"
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={aiTagCount}
+                          onChange={(e) => setAiTagCount(Number(e.target.value))}
+                        />
+                      </label>
+                      <label className="timeline-ai-fixed">
+                        Gerar hashtags
+                        <div className="timeline-ai-hashtags-row">
+                          <select
+                            className="timeline-ai-input"
+                            value={aiTagSource}
+                            onChange={(e) => setAiTagSource(e.target.value)}
+                          >
+                            <option value="local">Sem IA (local)</option>
+                            <option value="ai">Com IA (semantico)</option>
+                          </select>
+                          <button
+                            className="timeline-ai-chip"
+                            type="button"
+                            onClick={handleGenerateHashtags}
+                            disabled={aiTagLoading}
+                          >
+                            {aiTagLoading ? 'Gerando...' : 'Gerar hashtags'}
+                          </button>
+                        </div>
+                        {aiTagError && <div className="timeline-ai-error">{aiTagError}</div>}
+                        {aiSuggestedTags.length > 0 && (
+                          <div className="timeline-ai-suggested">
+                            <div className="timeline-ai-suggested-list">
+                              {aiSuggestedTags.map(tag => (
+                                <span key={tag} className="timeline-ai-suggested-chip">#{tag}</span>
+                              ))}
+                            </div>
+                            <button
+                              className="timeline-ai-chip"
+                              type="button"
+                              onClick={handleUseSuggestedTags}
+                            >
+                              Usar sugeridas
+                            </button>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                    <label className="timeline-ai-fixed">
+                      Hashtags fixas (separadas por virgula)
+                      <input
+                        className="timeline-ai-input"
+                        type="text"
                         value={aiFixedTags}
                         onChange={(e) => setAiFixedTags(e.target.value)}
                         placeholder="#noticias, #economia"
                       />
                     </label>
-                    <label className="timeline-ai-toggle">
-                      <input
-                        type="checkbox"
-                        checked={aiAutoTruncate}
-                        onChange={(e) => setAiAutoTruncate(e.target.checked)}
-                      />
-                      Truncar automaticamente em 280 caracteres
-                    </label>
                   </div>
-                  {aiLoading && <div className="timeline-ai-loading">Gerando texto...</div>}
-                  {aiError && <div className="timeline-ai-error">{aiError}</div>}
-                  {!aiLoading && !aiError && (
-                    <>
-                      <textarea
-                        className="timeline-ai-text"
-                        value={aiDraft}
-                        onChange={(e) => setAiDraft(e.target.value)}
-                        rows="6"
-                      />
-                      <div className="timeline-ai-count">{previewText.length} caracteres</div>
-                    </>
-                  )}
+                  <div className="timeline-ai-section timeline-ai-text-section">
+                    <div className="timeline-ai-section-title">Texto gerado</div>
+                    {aiLoading && <div className="timeline-ai-loading">Gerando texto...</div>}
+                    {aiError && <div className="timeline-ai-error">{aiError}</div>}
+                    {!aiLoading && !aiError && (
+                      <>
+                        <textarea
+                          className="timeline-ai-text"
+                          value={aiDraft}
+                          onChange={(e) => setAiDraft(e.target.value)}
+                          rows="6"
+                        />
+                        <div className="timeline-ai-count">{previewText.length} caracteres</div>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="timeline-ai-side">
                   <div className="timeline-ai-preview">
