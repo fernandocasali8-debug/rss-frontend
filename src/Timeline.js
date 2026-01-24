@@ -328,9 +328,7 @@ export default function Timeline() {
     const normalizedTitle = normalizeAiTitle(title);
     if (!normalizedTitle) return text;
     if (includeTitle) {
-      const normalizedText = normalizeAiTitle(text);
-      if (normalizedText.startsWith(normalizedTitle)) return text;
-      return `${title}\n\n${text}`.trim();
+      return text;
     }
     const lines = String(text).split(/\r?\n/);
     if (!lines.length) return text;
