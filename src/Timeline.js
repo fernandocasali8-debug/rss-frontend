@@ -135,7 +135,7 @@ export default function Timeline() {
   const [selectedTag, setSelectedTag] = useState('all');
   const [selectedSource, setSelectedSource] = useState('all');
   const [selectedHour, setSelectedHour] = useState('all');
-  const [aiModalItem, setAiModalItem] = useState(null);
+  const refreshAllowed = selectedHour === 'all';  const [aiModalItem, setAiModalItem] = useState(null);
   const [aiText, setAiText] = useState('');
   const [aiDraft, setAiDraft] = useState('');
   const [aiAutoTags, setAiAutoTags] = useState(true);
@@ -585,7 +585,9 @@ export default function Timeline() {
     window.open(aiSelectedImage.regularUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const fetchPosts = () => {
+  const fetchPosts = (force = false) => {
+    if (!force && !refreshAllowed) return;
+    if (!force && !refreshAllowed) return;
     nextRefreshRef.current = Date.now() + REFRESH_MS;
     setCountdown(Math.ceil(REFRESH_MS / 1000));
     apiFetch(API_BASE + '/aggregate')
@@ -698,6 +700,12 @@ export default function Timeline() {
     }, BATCH_DELAY_MS);
     return () => clearTimeout(timer);
   }, [progressiveLoading, visibleCount, posts.length]);
+
+  useEffect(() => {
+    if (selectedHour === "all") {
+      fetchPosts(true);
+    }
+  }, [selectedHour]);
 
   useEffect(() => {
     const storedRead = localStorage.getItem('rss-read-items');
