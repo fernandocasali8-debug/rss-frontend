@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './Timeline.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 const REFRESH_MS = 60000;
 const RETRY_MS = 15000;
@@ -808,7 +809,7 @@ export default function Timeline() {
       if (h) set.add(h);
     });
     return Array.from(set).sort((a, b) => Number(b.slice(0, 2)) - Number(a.slice(0, 2)));
-  }, [filteredPosts]);
+  }, [filteredPosts, selectedHour]);
 
   const stopwords = React.useMemo(() => new Set([
     'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',
