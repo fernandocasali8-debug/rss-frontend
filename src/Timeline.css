@@ -201,6 +201,86 @@
   margin-bottom: 10px;
 }
 
+.timeline-meta-panels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+
+.timeline-panel {
+  flex: 1 1 240px;
+  min-width: 220px;
+  background: var(--surface, #111b33);
+  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.timeline-panel-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.timeline-select {
+  width: 100%;
+  background: #0f172a;
+  color: var(--text);
+  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.timeline-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timeline-chip {
+  background: #1e293b;
+  color: var(--text);
+  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.timeline-chip:hover {
+  background: #273449;
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.timeline-chip.active {
+  background: #0ea5e9;
+  color: #0b1224;
+  border-color: #0ea5e9;
+}
+
+.timeline-chip.reset {
+  background: transparent;
+  border-style: dashed;
+}
+
+.timeline-chip-count {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.timeline-chip-empty {
+  color: var(--muted, #cbd5f5);
+  font-size: 12px;
+}
+
 .timeline-tag {
   border: 1px solid var(--border);
   background: var(--surface);

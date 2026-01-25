@@ -4,6 +4,7 @@ import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
 
 const REFRESH_MS = 60000;
+const RETRY_MS = 15000;
 const INITIAL_BATCH = 10;
 const BATCH_STEP = 10;
 const BATCH_DELAY_MS = 200;
@@ -121,6 +122,7 @@ export default function Timeline() {
   const [query, setQuery] = useState('');
   const [viewMode, setViewMode] = useState('two');
   const [selectedTag, setSelectedTag] = useState('all');
+  const [selectedSource, setSelectedSource] = useState('all');
   const [aiModalItem, setAiModalItem] = useState(null);
   const [aiText, setAiText] = useState('');
   const [aiDraft, setAiDraft] = useState('');
@@ -577,6 +579,8 @@ export default function Timeline() {
           if (res.status === 401) {
             setAccessRestricted(true);
           }
+          nextRefreshRef.current = Date.now() + RETRY_MS;
+          setCountdown(Math.ceil(RETRY_MS / 1000));
           setPosts([]);
           setProgressiveLoading(false);
           setLoading(false);
@@ -614,6 +618,8 @@ export default function Timeline() {
         setPosts([]);
         setProgressiveLoading(false);
         setLoading(false);
+        nextRefreshRef.current = Date.now() + RETRY_MS;
+        setCountdown(Math.ceil(RETRY_MS / 1000));
       });
   };
 
@@ -644,10 +650,17 @@ export default function Timeline() {
         fetchPosts();
       }
     };
+    const onVisible = () => {
+      if (!document.hidden && Date.now() >= nextRefreshRef.current) {
+        fetchPosts();
+      }
+    };
     window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
@@ -736,6 +749,10 @@ export default function Timeline() {
       .filter(item => !isFeedHidden(item))
       .filter(matchesQuery)
       .filter(item => {
+        if (selectedSource === 'all') return true;
+        return item.feedName === selectedSource;
+      })
+      .filter(item => {
         if (selectedTag === 'all') return true;
         return getItemTags(item).includes(selectedTag);
       })
@@ -745,7 +762,7 @@ export default function Timeline() {
         const today = getDateKey(Date.now());
         return itemDate === today;
       })
-  ), [posts, isFeedHidden, matchesQuery, selectedTag, getItemTags]);
+  ), [posts, isFeedHidden, matchesQuery, selectedSource, selectedTag, getItemTags]);
 
   const availableTags = React.useMemo(() => Array.from(
     new Set(
@@ -759,6 +776,56 @@ export default function Timeline() {
     () => filteredPosts.slice(0, visibleCount),
     [filteredPosts, visibleCount]
   );
+
+  const availableSources = React.useMemo(
+    () => Array.from(new Set(posts.map(item => item.feedName).filter(Boolean))).sort(),
+    [posts]
+  );
+
+  const stopwords = React.useMemo(() => new Set([
+    'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',
+    'no', 'na', 'nos', 'nas', 'por', 'para', 'com', 'sem', 'sobre', 'que', 'e', 'ou', 'se',
+    'ao', 'aos', 'ao', 'a', 'nao', 'não', 'mais', 'menos', 'muito', 'muita', 'muitos', 'muitas',
+    'ja', 'já', 'ser', 'sao', 'são', 'foi', 'era', 'esta', 'está', 'estao', 'estão', 'tem', 'têm',
+    'ter', 'vai', 'vao', 'vão', 'como', 'onde', 'quando', 'qual', 'quais', 'seu', 'sua', 'seus',
+    'suas', 'isso', 'isto', 'aquele', 'aquela', 'aqueles', 'aquelas', 'entre', 'sobre', 'pelas',
+    'pelos', 'pela', 'pelo'
+  ]), []);
+
+  const topWords = React.useMemo(() => {
+    const counts = new Map();
+    filteredPosts.forEach(item => {
+      const text = `${item.title || ''} ${item.contentSnippet || ''}`.toLowerCase();
+      text
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/[#@]/g, '')
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter(Boolean)
+        .forEach(word => {
+          const w = word.trim();
+          if (w.length < 4) return;
+          if (stopwords.has(w)) return;
+          counts.set(w, (counts.get(w) || 0) + 1);
+        });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([word, count]) => ({ word, count }));
+  }, [filteredPosts, stopwords]);
+
+  const topTags = React.useMemo(() => {
+    const counts = new Map();
+    filteredPosts.forEach(item => {
+      getItemTags(item).forEach(tag => {
+        counts.set(tag, (counts.get(tag) || 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([tag, count]) => ({ tag, count }));
+  }, [filteredPosts, getItemTags]);
 
   const handleSaveToggle = React.useCallback(async (item) => {
     const id = getItemId(item);
@@ -1238,6 +1305,65 @@ export default function Timeline() {
             >
               3 colunas
             </button>
+          </div>
+        </div>
+        <div className="timeline-meta-panels">
+          <div className="timeline-panel">
+            <div className="timeline-panel-title">Filtrar por fonte</div>
+            <select
+              className="timeline-select"
+              value={selectedSource}
+              onChange={(e) => setSelectedSource(e.target.value)}
+              aria-label="Filtrar por fonte"
+            >
+              <option value="all">Todas as fontes</option>
+              {availableSources.map(source => (
+                <option key={source} value={source}>{source}</option>
+              ))}
+            </select>
+          </div>
+          <div className="timeline-panel">
+            <div className="timeline-panel-title">Palavras mais citadas</div>
+            <div className="timeline-chip-list">
+              {topWords.length === 0 && <span className="timeline-chip-empty">Nenhum dado</span>}
+              {topWords.map(({ word, count }) => (
+                <button
+                  key={word}
+                  type="button"
+                  className="timeline-chip"
+                  onClick={() => setQuery(prev => prev.includes(word) ? prev : `${prev} ${word}`.trim())}
+                  title={`${count} ocorrência${count === 1 ? '' : 's'}`}
+                >
+                  {word} <span className="timeline-chip-count">{count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="timeline-panel">
+            <div className="timeline-panel-title">Temas recorrentes</div>
+            <div className="timeline-chip-list">
+              {topTags.length === 0 && <span className="timeline-chip-empty">Nenhum dado</span>}
+              {topTags.map(({ tag, count }) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`timeline-chip ${selectedTag === tag ? 'active' : ''}`}
+                  onClick={() => setSelectedTag(tag)}
+                  title={`${count} ocorrência${count === 1 ? '' : 's'}`}
+                >
+                  {tag} <span className="timeline-chip-count">{count}</span>
+                </button>
+              ))}
+              {selectedTag !== 'all' && (
+                <button
+                  type="button"
+                  className="timeline-chip reset"
+                  onClick={() => setSelectedTag('all')}
+                >
+                  Limpar temas
+                </button>
+              )}
+            </div>
           </div>
         </div>
         {availableTags.length > 0 && (
