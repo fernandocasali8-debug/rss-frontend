@@ -281,6 +281,18 @@
   font-size: 12px;
 }
 
+.timeline-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: #0ea5e9;
+  color: #0b1224;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .timeline-tag {
   border: 1px solid var(--border);
   background: var(--surface);

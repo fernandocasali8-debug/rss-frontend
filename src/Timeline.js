@@ -146,6 +146,10 @@ export default function Timeline() {
   const [aiError, setAiError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadingId, setAiLoadingId] = useState(null);
+  const [aiKeywords, setAiKeywords] = useState([]);
+  const [aiThemes, setAiThemes] = useState([]);
+  const [aiKeyLoading, setAiKeyLoading] = useState(false);
+  const [aiKeyError, setAiKeyError] = useState('');
   const [youtubeModalItem, setYoutubeModalItem] = useState(null);
   const [youtubeVideos, setYoutubeVideos] = useState([]);
   const [youtubeLoading, setYoutubeLoading] = useState(false);
@@ -827,6 +831,61 @@ export default function Timeline() {
       .map(([tag, count]) => ({ tag, count }));
   }, [filteredPosts, getItemTags]);
 
+  // IA para palavras-chave e temas recorrentes
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!filteredPosts.length) {
+      setAiKeywords([]);
+      setAiThemes([]);
+      setAiKeyLoading(false);
+      setAiKeyError('');
+      return () => controller.abort();
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setAiKeyLoading(true);
+        setAiKeyError('');
+        const sample = filteredPosts
+          .slice(0, 30)
+          .map(item => `${item.title || ''} - ${item.contentSnippet || ''}`)
+          .join('\n')
+          .slice(0, 4000);
+        const res = await apiFetch(API_BASE + '/ai/hashtags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: sample, maxTags: 12 }),
+          signal: controller.signal
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false || !Array.isArray(data.tags)) {
+          throw new Error(data.message || 'Falha ao extrair palavras-chave.');
+        }
+        const uniq = Array.from(new Set(data.tags.map(t => String(t || '').trim()).filter(Boolean)));
+        setAiKeywords(uniq);
+        setAiThemes(uniq);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setAiKeyError(err.message || 'Falha ao extrair palavras-chave.');
+        setAiKeywords([]);
+        setAiThemes([]);
+      } finally {
+        if (!controller.signal.aborted) setAiKeyLoading(false);
+      }
+    }, 600);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [filteredPosts]);
+
+  const displayKeywords = aiKeywords.length
+    ? aiKeywords.map(word => ({ word, count: null }))
+    : topWords;
+
+  const displayThemes = aiThemes.length
+    ? aiThemes.map(tag => ({ tag, count: null }))
+    : topTags;
+
   const handleSaveToggle = React.useCallback(async (item) => {
     const id = getItemId(item);
     if (!id) return;
@@ -1323,35 +1382,51 @@ export default function Timeline() {
             </select>
           </div>
           <div className="timeline-panel">
-            <div className="timeline-panel-title">Palavras mais citadas</div>
+            <div className="timeline-panel-title">
+              Palavras mais citadas
+              {aiKeyLoading && <span className="timeline-badge">IA</span>}
+              {aiKeywords.length > 0 && !aiKeyLoading && <span className="timeline-badge">IA</span>}
+            </div>
             <div className="timeline-chip-list">
-              {topWords.length === 0 && <span className="timeline-chip-empty">Nenhum dado</span>}
-              {topWords.map(({ word, count }) => (
+              {aiKeyError && <span className="timeline-chip-empty">{aiKeyError}</span>}
+              {displayKeywords.length === 0 && !aiKeyError && (
+                <span className="timeline-chip-empty">Nenhum dado</span>
+              )}
+              {displayKeywords.map(({ word, count }) => (
                 <button
                   key={word}
                   type="button"
                   className="timeline-chip"
                   onClick={() => setQuery(prev => prev.includes(word) ? prev : `${prev} ${word}`.trim())}
-                  title={`${count} ocorrência${count === 1 ? '' : 's'}`}
+                  title={count ? `${count} ocorrência${count === 1 ? '' : 's'}` : 'Sugerido pela IA'}
                 >
-                  {word} <span className="timeline-chip-count">{count}</span>
+                  {word}
+                  {count ? <span className="timeline-chip-count">{count}</span> : null}
                 </button>
               ))}
             </div>
           </div>
           <div className="timeline-panel">
-            <div className="timeline-panel-title">Temas recorrentes</div>
+            <div className="timeline-panel-title">
+              Temas recorrentes
+              {aiKeyLoading && <span className="timeline-badge">IA</span>}
+              {aiThemes.length > 0 && !aiKeyLoading && <span className="timeline-badge">IA</span>}
+            </div>
             <div className="timeline-chip-list">
-              {topTags.length === 0 && <span className="timeline-chip-empty">Nenhum dado</span>}
-              {topTags.map(({ tag, count }) => (
+              {aiKeyError && <span className="timeline-chip-empty">{aiKeyError}</span>}
+              {displayThemes.length === 0 && !aiKeyError && (
+                <span className="timeline-chip-empty">Nenhum dado</span>
+              )}
+              {displayThemes.map(({ tag, count }) => (
                 <button
                   key={tag}
                   type="button"
                   className={`timeline-chip ${selectedTag === tag ? 'active' : ''}`}
                   onClick={() => setSelectedTag(tag)}
-                  title={`${count} ocorrência${count === 1 ? '' : 's'}`}
+                  title={count ? `${count} ocorrência${count === 1 ? '' : 's'}` : 'Sugerido pela IA'}
                 >
-                  {tag} <span className="timeline-chip-count">{count}</span>
+                  {tag}
+                  {count ? <span className="timeline-chip-count">{count}</span> : null}
                 </button>
               ))}
               {selectedTag !== 'all' && (
