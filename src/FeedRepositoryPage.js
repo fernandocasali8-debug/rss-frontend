@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { API_BASE, apiFetch } from './api';
 import './FeedRepositoryPage.css';
 import fallbackFavicon from './fallback-favicon.svg';
@@ -178,6 +178,7 @@ export default function FeedRepositoryPage() {
   const [loadingId, setLoadingId] = useState('');
   const [query, setQuery] = useState('');
   const [customFeeds, setCustomFeeds] = useState([]);
+  const [showHidden, setShowHidden] = useState(false);
   const [newFeedName, setNewFeedName] = useState('');
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedDescription, setNewFeedDescription] = useState('');
@@ -238,8 +239,22 @@ export default function FeedRepositoryPage() {
     return new Set(existingFeeds.map(feed => normalizeUrl(feed.url)));
   }, [existingFeeds]);
 
-  const getEffectiveUrl = (feed) => customUrls[feed.url] || feed.url;
-  const getEffectiveName = (feed) => customNames[feed.url] || feed.name;
+  const hiddenSet = useMemo(() => {
+    return new Set(
+      existingFeeds
+        .filter((feed) => feed.showOnTimeline === false)
+        .map((feed) => normalizeUrl(feed.url))
+    );
+  }, [existingFeeds]);
+
+  const getEffectiveUrl = useCallback(
+    (feed) => customUrls[feed.url] || feed.url,
+    [customUrls]
+  );
+  const getEffectiveName = useCallback(
+    (feed) => customNames[feed.url] || feed.name,
+    [customNames]
+  );
   const generatedMap = useMemo(() => {
     const map = new Map();
     generatedFeeds.forEach(item => {
@@ -271,12 +286,15 @@ export default function FeedRepositoryPage() {
 
   const filteredFeeds = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) return repositoryFeeds;
-    return repositoryFeeds.filter(feed =>
-      feed.name.toLowerCase().includes(term) ||
-      (feed.description || '').toLowerCase().includes(term)
-    );
-  }, [query, repositoryFeeds]);
+    return repositoryFeeds.filter(feed => {
+      const matches =
+        !term ||
+        feed.name.toLowerCase().includes(term) ||
+        (feed.description || '').toLowerCase().includes(term);
+      const isHidden = hiddenSet.has(normalizeUrl(getEffectiveUrl(feed)));
+      return matches && (showHidden || !isHidden);
+    });
+  }, [query, repositoryFeeds, hiddenSet, showHidden, getEffectiveUrl]);
 
   useEffect(() => {
     const urls = repositoryFeeds.map(feed => feed.url);
@@ -357,14 +375,36 @@ export default function FeedRepositoryPage() {
     setLoadingId(`remove:${effectiveUrl}`);
     try {
       if (existing) {
+        // Em vez de deletar, marca como oculto para não reaparecer
         const res = await apiFetch(`${API_BASE}/feeds/${existing.id}`, {
-          method: 'DELETE'
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...existing, showOnTimeline: false })
         });
-        if (!res.ok && res.status !== 204) {
-          throw new Error('Falha ao remover feed.');
+        if (!res.ok) throw new Error('Falha ao remover feed.');
+        const data = await res.json();
+        setExistingFeeds(prev =>
+          prev.map(item => (item.id === data.id ? data : item))
+        );
+      } else {
+        // Base/custom sem id: cria um registro somente para esconder
+        const res = await apiFetch(`${API_BASE}/feeds`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: effectiveUrl,
+            title: feed.title || feedName,
+            category: feed.category,
+            language: feed.language || 'pt',
+            showOnTimeline: false
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setExistingFeeds(prev => [...prev, data]);
         }
-        setExistingFeeds(prev => prev.filter(item => item.id !== existing.id));
       }
+
       if (feed.custom) {
         const next = customFeeds.filter(item => normalizeUrl(item.url) !== normalizeUrl(feed.url));
         setCustomFeeds(next);
@@ -380,6 +420,7 @@ export default function FeedRepositoryPage() {
           return nextNames;
         });
       }
+
       setStatusMap(prev => {
         const next = { ...prev };
         delete next[normalizeUrl(effectiveUrl)];
@@ -387,6 +428,7 @@ export default function FeedRepositoryPage() {
       });
       setMessage(`Feed removido: ${feedName}.`);
     } catch (err) {
+      console.error(err);
       setMessage('Nao foi possivel remover o feed.');
     } finally {
       setLoadingId('');
@@ -426,10 +468,8 @@ export default function FeedRepositoryPage() {
       setMessage('Informe nome e URL para adicionar a fonte.');
       return;
     }
-    const next = [
-      ...customFeeds,
-      { name, url, description, language: newFeedLanguage }
-    ];
+    const newFeed = { name, url, description, language: newFeedLanguage, custom: true };
+    const next = [...customFeeds, newFeed];
     setCustomFeeds(next);
     localStorage.setItem('rss-repo-custom', JSON.stringify(next));
     setNewFeedName('');
@@ -438,6 +478,7 @@ export default function FeedRepositoryPage() {
     setNewFeedLanguage('pt');
     setMessage(`Fonte adicionada ao repositorio: ${name}.`);
     refreshStatus([url]);
+    handleAdd(newFeed);
   };
 
   const openMaintenance = (feed) => {
@@ -519,6 +560,15 @@ export default function FeedRepositoryPage() {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
+
+      <label className="feed-repo-toggle">
+        <input
+          type="checkbox"
+          checked={showHidden}
+          onChange={(e) => setShowHidden(e.target.checked)}
+        />{' '}
+        Mostrar feeds ocultos
+      </label>
 
       {message && <div className="feed-repo-message">{message}</div>}
       {statusLoading && <div className="feed-repo-message">Verificando status dos feeds...</div>}
