@@ -69,6 +69,16 @@ function getDateKey(dateStr) {
   }).format(d);
 }
 
+function getHourKey(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('pt-BR', {
+    hour: '2-digit',
+    timeZone: BRT_TIMEZONE
+  }).format(d);
+}
+
 function shortenTitle(title, max = 40) {
   if (!title) return '';
   return title.length > max ? title.slice(0, max - 3) + '...' : title;
@@ -123,6 +133,7 @@ export default function Timeline() {
   const [viewMode, setViewMode] = useState('two');
   const [selectedTag, setSelectedTag] = useState('all');
   const [selectedSource, setSelectedSource] = useState('all');
+  const [selectedHour, setSelectedHour] = useState('all');
   const [aiModalItem, setAiModalItem] = useState(null);
   const [aiText, setAiText] = useState('');
   const [aiDraft, setAiDraft] = useState('');
@@ -757,6 +768,10 @@ export default function Timeline() {
         return item.feedName === selectedSource;
       })
       .filter(item => {
+        if (selectedHour === 'all') return true;
+        return getHourKey(item.pubDate || item.isoDate) === selectedHour;
+      })
+      .filter(item => {
         if (selectedTag === 'all') return true;
         return getItemTags(item).includes(selectedTag);
       })
@@ -785,6 +800,15 @@ export default function Timeline() {
     () => Array.from(new Set(posts.map(item => item.feedName).filter(Boolean))).sort(),
     [posts]
   );
+
+  const availableHours = React.useMemo(() => {
+    const set = new Set();
+    filteredPosts.forEach(item => {
+      const h = getHourKey(item.pubDate || item.isoDate);
+      if (h) set.add(h);
+    });
+    return Array.from(set).sort((a, b) => Number(b.slice(0, 2)) - Number(a.slice(0, 2)));
+  }, [filteredPosts]);
 
   const stopwords = React.useMemo(() => new Set([
     'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',
@@ -1386,6 +1410,28 @@ export default function Timeline() {
                 <option key={source} value={source}>{source}</option>
               ))}
             </select>
+          </div>
+          <div className="timeline-panel">
+            <div className="timeline-panel-title">Horas (hoje)</div>
+            <div className="timeline-chip-list">
+              <button
+                type="button"
+                className={`timeline-chip ${selectedHour === 'all' ? 'active' : ''}`}
+                onClick={() => setSelectedHour('all')}
+              >
+                Todas
+              </button>
+              {availableHours.map(hour => (
+                <button
+                  key={hour}
+                  type="button"
+                  className={`timeline-chip ${selectedHour === hour ? 'active' : ''}`}
+                  onClick={() => setSelectedHour(hour)}
+                >
+                  {hour}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="timeline-panel">
             <div className="timeline-panel-title">
