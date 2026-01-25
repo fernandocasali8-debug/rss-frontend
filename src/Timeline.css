@@ -300,6 +300,35 @@
   vertical-align: middle;
 }
 
+.timeline-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timeline-tab {
+  border: 1px solid #cbd5e1;
+  background: #e2e8f0;
+  color: #0f172a;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.timeline-tab:hover {
+  background: #cbd5e1;
+  border-color: #94a3b8;
+}
+
+.timeline-tab.active {
+  background: #0ea5e9;
+  color: #0b1224;
+  border-color: #0ea5e9;
+}
+
 .timeline-tag {
   border: 1px solid var(--border);
   background: var(--surface);

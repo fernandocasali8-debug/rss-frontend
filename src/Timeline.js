@@ -802,6 +802,7 @@ export default function Timeline() {
     [posts]
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableHours = React.useMemo(() => {
     const set = new Set();
     filteredPosts.forEach(item => {
@@ -1414,11 +1415,13 @@ export default function Timeline() {
           </div>
           <div className="timeline-panel">
             <div className="timeline-panel-title">Horas (hoje)</div>
-            <div className="timeline-chip-list">
+            <div className="timeline-tabs" role="tablist" aria-label="Filtrar por hora">
               <button
                 type="button"
-                className={`timeline-chip ${selectedHour === 'all' ? 'active' : ''}`}
+                className={`timeline-tab ${selectedHour === 'all' ? 'active' : ''}`}
                 onClick={() => setSelectedHour('all')}
+                role="tab"
+                aria-selected={selectedHour === 'all'}
               >
                 Todas
               </button>
@@ -1426,8 +1429,10 @@ export default function Timeline() {
                 <button
                   key={hour}
                   type="button"
-                  className={`timeline-chip ${selectedHour === hour ? 'active' : ''}`}
+                  className={`timeline-tab ${selectedHour === hour ? 'active' : ''}`}
                   onClick={() => setSelectedHour(hour)}
+                  role="tab"
+                  aria-selected={selectedHour === hour}
                 >
                   {hour}
                 </button>
