@@ -782,7 +782,7 @@ export default function Timeline() {
         const today = getDateKey(Date.now());
         return itemDate === today;
       })
-  ), [posts, isFeedHidden, matchesQuery, selectedSource, selectedTag, getItemTags]);
+  ), [posts, isFeedHidden, matchesQuery, selectedSource, selectedTag, getItemTags, selectedHour]);
 
   const availableTags = React.useMemo(() => Array.from(
     new Set(
