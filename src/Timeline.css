@@ -341,6 +341,7 @@
 @media (min-width: 980px) {
   .timeline {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
   }
 }
 
@@ -367,6 +368,7 @@
   flex-direction: column;
   align-items: flex-start;
   height: auto;
+  align-self: start;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
