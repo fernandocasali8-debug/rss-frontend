@@ -96,7 +96,10 @@
 
 .timeline {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 18px;
+  align-items: start;
+  grid-auto-flow: row dense;
 }
 
 .timeline.view-list {
@@ -104,11 +107,11 @@
 }
 
 .timeline.view-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
 }
 
 .timeline.view-three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .timeline-search {
@@ -335,13 +338,6 @@
   .timeline-view-toggle {
     width: 100%;
     justify-content: space-between;
-  }
-}
-
-@media (min-width: 980px) {
-  .timeline {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
   }
 }
 
