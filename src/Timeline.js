@@ -135,7 +135,8 @@ export default function Timeline() {
   const [selectedTag, setSelectedTag] = useState('all');
   const [selectedSource, setSelectedSource] = useState('all');
   const [selectedHour, setSelectedHour] = useState('all');
-  const refreshAllowed = selectedHour === 'all';  const [aiModalItem, setAiModalItem] = useState(null);
+  const refreshAllowed = selectedHour === 'all';
+  const [aiModalItem, setAiModalItem] = useState(null);
   const [aiText, setAiText] = useState('');
   const [aiDraft, setAiDraft] = useState('');
   const [aiAutoTags, setAiAutoTags] = useState(true);
@@ -586,8 +587,11 @@ export default function Timeline() {
   };
 
   const fetchPosts = (force = false) => {
-    if (!force && !refreshAllowed) return;
-    if (!force && !refreshAllowed) return;
+    if (!force && !refreshAllowed) {
+      nextRefreshRef.current = Date.now() + REFRESH_MS;
+      setCountdown(Math.ceil(REFRESH_MS / 1000));
+      return;
+    }
     nextRefreshRef.current = Date.now() + REFRESH_MS;
     setCountdown(Math.ceil(REFRESH_MS / 1000));
     apiFetch(API_BASE + '/aggregate')
@@ -599,7 +603,6 @@ export default function Timeline() {
           }
           nextRefreshRef.current = Date.now() + RETRY_MS;
           setCountdown(Math.ceil(RETRY_MS / 1000));
-          setPosts([]);
           setProgressiveLoading(false);
           setLoading(false);
           return [];
@@ -609,31 +612,42 @@ export default function Timeline() {
       })
       .then(data => {
         if (!Array.isArray(data)) return;
+        const todayKey = getDateKey(Date.now());
+        let merged = data;
         setPosts(prev => {
-          if (prev.length > 0 && data.length > 0 && data[0].link !== prev[0].link) {
+          const seen = new Set();
+          merged = [...data, ...prev].filter(item => {
+            const id = getItemId(item);
+            if (!id || seen.has(id)) return false;
+            const itemDateKey = getDateKey(item.pubDate || item.isoDate);
+            if (itemDateKey !== todayKey) return false;
+            seen.add(id);
+            return true;
+          });
+          if (prev.length > 0 && merged.length > 0 && merged[0].link !== prev[0].link) {
             setNotifications(n => [
               {
-                title: shortenTitle(data[0].title),
-                hour: formatHour(data[0].pubDate || data[0].isoDate),
-                link: data[0].link
+                title: shortenTitle(merged[0].title),
+                hour: formatHour(merged[0].pubDate || merged[0].isoDate),
+                link: merged[0].link
               },
               ...n.slice(0, 2)
             ]);
           }
-          return data;
+          return merged;
         });
         try {
-          localStorage.setItem('rss-posts-cache', JSON.stringify(data.slice(0, 200)));
+          localStorage.setItem('rss-posts-cache', JSON.stringify((merged || data).slice(0, 200)));
         } catch (e) {
           // ignore
         }
-        setVisibleCount(Math.min(INITIAL_BATCH, data.length));
-        setProgressiveLoading(data.length > INITIAL_BATCH);
+        const mergedLength = (merged || data).length;
+        setVisibleCount(prev => Math.min(Math.max(prev, INITIAL_BATCH), mergedLength));
+        setProgressiveLoading(mergedLength > Math.max(visibleCount, INITIAL_BATCH));
         setLoading(false);
       })
       .catch(() => {
         setAccessRestricted(false);
-        setPosts([]);
         setProgressiveLoading(false);
         setLoading(false);
         nextRefreshRef.current = Date.now() + RETRY_MS;
