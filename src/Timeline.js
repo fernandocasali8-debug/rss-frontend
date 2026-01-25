@@ -642,8 +642,8 @@ export default function Timeline() {
           // ignore
         }
         const mergedLength = (merged || data).length;
-        setVisibleCount(prev => Math.min(Math.max(prev, INITIAL_BATCH), mergedLength));
-        setProgressiveLoading(mergedLength > Math.max(visibleCount, INITIAL_BATCH));
+        setVisibleCount(mergedLength);
+        setProgressiveLoading(false);
         setLoading(false);
       })
       .catch(() => {
@@ -662,7 +662,8 @@ export default function Timeline() {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length) {
           setPosts(parsed);
-          setVisibleCount(Math.min(INITIAL_BATCH, parsed.length));
+          setVisibleCount(parsed.length);
+          setProgressiveLoading(false);
           setLoading(false);
         }
       } catch (e) {
