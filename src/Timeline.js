@@ -1045,6 +1045,7 @@ export default function Timeline() {
     visiblePosts.map((item, idx) => {
       const itemTags = getItemTags(item);
       const favicon = getFaviconUrl(item.feedUrl || item.link);
+      const itemImage = item.image || '';
       return (
         <div
           className={`timeline-post ${isRead(item) ? 'is-read' : ''}`}
@@ -1071,6 +1072,11 @@ export default function Timeline() {
             <span className="timeline-date">{formatDateTime(item.pubDate || item.isoDate)}</span>
           </div>
           <div className="timeline-post-body">
+            {itemImage && (
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="timeline-thumb">
+                <img src={itemImage} alt={item.title || ''} loading="lazy" />
+              </a>
+            )}
             <a href={item.link} target="_blank" rel="noopener noreferrer" className="timeline-title">{item.title}</a>
             {itemTags.length > 0 && (
               <div className="timeline-tags-inline">
