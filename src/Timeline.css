@@ -211,8 +211,8 @@
 .timeline-panel {
   flex: 1 1 240px;
   min-width: 220px;
-  background: var(--surface, #111b33);
-  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 12px;
 }
@@ -220,14 +220,14 @@
 .timeline-panel-title {
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--text);
+  color: #0f172a;
 }
 
 .timeline-select {
   width: 100%;
-  background: #0f172a;
-  color: var(--text);
-  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 8px 10px;
 }
@@ -239,9 +239,9 @@
 }
 
 .timeline-chip {
-  background: #1e293b;
-  color: var(--text);
-  border: 1px solid var(--stroke, rgba(148, 163, 184, 0.2));
+  background: #e2e8f0;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
   border-radius: 20px;
   padding: 6px 10px;
   font-size: 12px;
@@ -254,8 +254,8 @@
 }
 
 .timeline-chip:hover {
-  background: #273449;
-  border-color: rgba(148, 163, 184, 0.35);
+  background: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 .timeline-chip.active {
