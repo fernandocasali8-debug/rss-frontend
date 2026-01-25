@@ -805,12 +805,15 @@ export default function Timeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableHours = React.useMemo(() => {
     const set = new Set();
-    filteredPosts.forEach(item => {
+    const todayKey = getDateKey(Date.now());
+    posts.forEach(item => {
+      const itemDateKey = getDateKey(item.pubDate || item.isoDate);
+      if (itemDateKey !== todayKey) return;
       const h = getHourKey(item.pubDate || item.isoDate);
       if (h) set.add(h);
     });
     return Array.from(set).sort((a, b) => Number(b.slice(0, 2)) - Number(a.slice(0, 2)));
-  }, [filteredPosts, selectedHour]);
+  }, [posts]);
 
   const stopwords = React.useMemo(() => new Set([
     'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',
