@@ -804,15 +804,18 @@ export default function Timeline() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableHours = React.useMemo(() => {
-    const set = new Set();
+    const map = new Map();
     const todayKey = getDateKey(Date.now());
     posts.forEach(item => {
       const itemDateKey = getDateKey(item.pubDate || item.isoDate);
       if (itemDateKey !== todayKey) return;
       const h = getHourKey(item.pubDate || item.isoDate);
-      if (h) set.add(h);
+      if (!h) return;
+      map.set(h, (map.get(h) || 0) + 1);
     });
-    return Array.from(set).sort((a, b) => Number(b.slice(0, 2)) - Number(a.slice(0, 2)));
+    return Array.from(map.entries())
+      .sort((a, b) => Number(b[0].slice(0, 2)) - Number(a[0].slice(0, 2)))
+      .map(([hour, count]) => ({ hour, count }));
   }, [posts]);
 
   const stopwords = React.useMemo(() => new Set([
@@ -1428,7 +1431,7 @@ export default function Timeline() {
               >
                 Todas
               </button>
-              {availableHours.map(hour => (
+              {availableHours.map(({ hour, count }) => (
                 <button
                   key={hour}
                   type="button"
@@ -1437,7 +1440,8 @@ export default function Timeline() {
                   role="tab"
                   aria-selected={selectedHour === hour}
                 >
-                  {hour}
+                  {`${hour}:00`}
+                  <span className="timeline-tab-badge">{count}</span>
                 </button>
               ))}
             </div>
