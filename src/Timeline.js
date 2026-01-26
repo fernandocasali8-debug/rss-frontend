@@ -9,6 +9,7 @@ const RETRY_MS = 15000;
 const INITIAL_BATCH = 10;
 const BATCH_STEP = 10;
 const BATCH_DELAY_MS = 200;
+const VISIBLE_CAP = 80;
 const BRT_TIMEZONE = 'America/Sao_Paulo';
 const promoItems = [
   {
@@ -642,8 +643,10 @@ export default function Timeline() {
           // ignore
         }
         const mergedLength = (merged || data).length;
-        setVisibleCount(mergedLength);
-        setProgressiveLoading(false);
+        const capped = Math.min(VISIBLE_CAP, mergedLength);
+        const nextVisible = Math.min(Math.max(visibleCount, INITIAL_BATCH), capped);
+        setVisibleCount(nextVisible);
+        setProgressiveLoading(mergedLength > nextVisible);
         setLoading(false);
       })
       .catch(() => {
@@ -662,8 +665,9 @@ export default function Timeline() {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length) {
           setPosts(parsed);
-          setVisibleCount(parsed.length);
-          setProgressiveLoading(false);
+          const capped = Math.min(VISIBLE_CAP, parsed.length);
+          setVisibleCount(capped);
+          setProgressiveLoading(parsed.length > capped);
           setLoading(false);
         }
       } catch (e) {
