@@ -850,9 +850,10 @@ export default function Timeline() {
 
   const hoursProgress = React.useMemo(() => {
     const elapsed = Math.max(1, currentBrtHour + 1);
-    const loaded = availableHours.length;
-    return Math.min(100, Math.round((loaded / elapsed) * 100));
-  }, [availableHours.length, currentBrtHour]);
+    const loaded = Math.max(0, availableHours.length);
+    const pct = Math.round((loaded / elapsed) * 100);
+    return Math.min(100, Math.max(0, pct));
+  }, [availableHours, currentBrtHour]);
 
   const stopwords = React.useMemo(() => new Set([
     'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',

@@ -314,8 +314,9 @@
 
 .timeline-progress-bar {
   position: relative;
-  height: 6px;
-  background: #e9eef6;
+  height: 8px;
+  background: #dfe6f2;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 999px;
   overflow: hidden;
 }
