@@ -39,12 +39,13 @@
 }
 
 .highlights-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 20px;
+  column-width: 360px;
+  column-gap: 18px;
+  column-fill: balance;
 }
 
 .highlight-card {
+  break-inside: avoid;
   border: 1px solid #e3e8f0;
   border-radius: 18px;
   padding: 16px 18px;
