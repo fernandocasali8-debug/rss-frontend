@@ -38,9 +38,9 @@ export default function HighlightsPage() {
     <div className="highlights-page">
       <div className="highlights-header">
         <div>
-          <h2>Meus sublinhados</h2>
+          <h2>Grifos</h2>
           <p className="highlights-sub">
-            Texto marcado em qualquer tela. Clique no × para remover.
+            Trechos que você marcou em qualquer tela. Agrupados por notícia/cartão.
           </p>
         </div>
         <input
@@ -72,14 +72,17 @@ export default function HighlightsPage() {
                   ) : (
                     <div className="highlight-card-title">{group.cardTitle}</div>
                   )}
-                  <div className="highlight-page">{group.page || '—'}</div>
+                  <div className="highlight-page">
+                    {group.page || '—'}
+                    {group.cardId ? ` · ID ${group.cardId}` : ''}
+                  </div>
                 </div>
               </div>
               <div className="highlight-list">
                 {group.items.map((h) => (
                   <div key={h.id} className="highlight-text-row">
                     <span className="highlight-bullet" style={{ backgroundColor: h.color }} />
-                    <span className="highlight-text">({h.text})</span>
+                    <span className="highlight-text">“{h.text}”</span>
                     <button className="highlight-remove" onClick={() => removeHighlight(h.id)} aria-label="Remover">
                       ×
                     </button>
@@ -88,9 +91,13 @@ export default function HighlightsPage() {
               </div>
               <div className="highlight-foot">
                 <span>
-                  {group.items.length} grifo{group.items.length > 1 ? 's' : ''}
+                  {group.items.length} grifo{group.items.length > 1 ? 's' : ''} · {new Date(group.items[0]?.createdAt || Date.now()).toLocaleString('pt-BR')}
                 </span>
-                {group.cardId && <span className="highlight-id">ID: {group.cardId}</span>}
+                {group.cardUrl && (
+                  <a className="highlight-open" href={group.cardUrl} target="_blank" rel="noopener noreferrer">
+                    Abrir notícia
+                  </a>
+                )}
               </div>
             </div>
           ))}
