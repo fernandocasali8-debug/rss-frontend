@@ -825,6 +825,13 @@ export default function Timeline() {
     [posts]
   );
 
+  const currentBrtHour = React.useMemo(() => {
+    const h = Number(
+      new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', timeZone: BRT_TIMEZONE }).format(Date.now())
+    );
+    return Number.isFinite(h) ? h : 23;
+  }, []);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableHours = React.useMemo(() => {
     const map = new Map();
@@ -840,6 +847,12 @@ export default function Timeline() {
       .sort((a, b) => Number(b[0].slice(0, 2)) - Number(a[0].slice(0, 2)))
       .map(([hour, count]) => ({ hour, count }));
   }, [posts]);
+
+  const hoursProgress = React.useMemo(() => {
+    const elapsed = Math.max(1, currentBrtHour + 1);
+    const loaded = availableHours.length;
+    return Math.min(100, Math.round((loaded / elapsed) * 100));
+  }, [availableHours.length, currentBrtHour]);
 
   const stopwords = React.useMemo(() => new Set([
     'a', 'o', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'da', 'do', 'das', 'dos', 'em',
@@ -1467,6 +1480,21 @@ export default function Timeline() {
                   <span className="timeline-tab-badge">{count}</span>
                 </button>
               ))}
+            </div>
+            <div className="timeline-progress" aria-label="Progresso de horas carregadas hoje">
+              <div className="timeline-progress-bar">
+                <div
+                  className="timeline-progress-fill"
+                  style={{ width: `${hoursProgress}%` }}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow={hoursProgress}
+                  role="progressbar"
+                />
+              </div>
+              <span className="timeline-progress-label">
+                {hoursProgress}% das horas de hoje carregadas
+              </span>
             </div>
           </div>
           <div className="timeline-panel">
