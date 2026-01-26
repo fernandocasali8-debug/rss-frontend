@@ -80,7 +80,7 @@ const ROUTE_SECTIONS = [
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { key: 'home', label: 'Linha do tempo', icon: Rss },
       { key: 'saved', label: 'Salvos', icon: Bookmark },
-      { key: 'highlights', label: 'Sublinhos', icon: HighlighterIcon },
+      { key: 'highlights', label: 'Grifos', icon: HighlighterIcon },
       { key: 'watch', label: 'Acompanhamentos', icon: Eye },
       { key: 'fact-check', label: 'Fact Check', icon: Search },
       { key: 'spaces-live', label: 'Spaces', icon: Mic }

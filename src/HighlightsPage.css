@@ -17,6 +17,9 @@
   font-size: 22px;
   letter-spacing: -0.01em;
   color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .highlights-sub {
@@ -32,20 +35,24 @@
   border: 1px solid #d9dfeb;
   background: #f8fafc;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04) inset;
+  font-size: 14px;
 }
 
 .highlights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
 }
 
 .highlight-card {
-  border: 1px solid #e6eaf1;
-  border-radius: 16px;
-  padding: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e3e8f0;
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: #ffffff;
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -1px 0 rgba(15, 23, 42, 0.02) inset;
   display: flex;
   flex-direction: column;
   gap: 12px;
