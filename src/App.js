@@ -24,10 +24,15 @@ import XGeneratorPage from './XGeneratorPage';
 import FactCheckPage from './FactCheckPage';
 import SpacesLivePage from './SpacesLivePage';
 import Sidebar from './Sidebar';
+import HighlightsPage from './HighlightsPage';
+import './HighlightsPage.css';
+import { HighlightProvider } from './HighlightContext';
+import Highlighter from './Highlighter';
 import {
   Bell,
   Bookmark,
   BookOpen,
+  Highlighter as HighlighterIcon,
   Eye,
   Folder,
   LayoutDashboard,
@@ -75,6 +80,7 @@ const ROUTE_SECTIONS = [
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { key: 'home', label: 'Linha do tempo', icon: Rss },
       { key: 'saved', label: 'Salvos', icon: Bookmark },
+      { key: 'highlights', label: 'Sublinhos', icon: HighlighterIcon },
       { key: 'watch', label: 'Acompanhamentos', icon: Eye },
       { key: 'fact-check', label: 'Fact Check', icon: Search },
       { key: 'spaces-live', label: 'Spaces', icon: Mic }
@@ -104,10 +110,10 @@ const ROUTE_SECTIONS = [
 ];
 
 const PLAN_ACCESS = {
-  starter: ['dashboard', 'home', 'saved', 'fact-check', 'spaces-live'],
-  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'fact-check', 'spaces-live'],
-  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live'],
-  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live']
+  starter: ['dashboard', 'home', 'saved', 'highlights', 'fact-check', 'spaces-live'],
+  pro: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'highlights', 'fact-check', 'spaces-live'],
+  business: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'highlights', 'fact-check', 'spaces-live'],
+  enterprise: ['dashboard', 'home', 'saved', 'summary', 'trends', 'trends-news', 'trends-terms', 'trends-events', 'watch', 'influencers', 'team', 'rss-generator', 'repo', 'config', 'fact-check', 'spaces-live', 'highlights']
 };
 
 const PendingApproval = ({ onLogout, userEmail }) => (
@@ -776,7 +782,9 @@ function MainApp({ initialPage }) {
   ));
 
   return (
-    <div className="min-h-screen" onContextMenu={handleContextMenu}>
+    <HighlightProvider>
+      <Highlighter />
+      <div className="min-h-screen" onContextMenu={handleContextMenu}>
       <Sidebar
         routes={routeSections}
         activeKey={page}
@@ -882,6 +890,7 @@ function MainApp({ initialPage }) {
           {page === 'dashboard' && <DashboardPage />}
           {page === 'home' && <Timeline key={timelineKey} />}
           {page === 'saved' && <SavedPage />}
+          {page === 'highlights' && <HighlightsPage />}
           {page === 'summary' && <SummaryPage />}
           {page === 'trends' && <TrendsPage />}
           {page === 'trends-terms' && <TrendsTermsPage />}
@@ -1044,7 +1053,8 @@ function MainApp({ initialPage }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </HighlightProvider>
   );
 
 }

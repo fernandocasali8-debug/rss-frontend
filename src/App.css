@@ -1045,3 +1045,59 @@ h3 {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* ------------------ Highlights ------------------ */
+.hl-toolbar {
+  position: absolute;
+  transform: translate(-50%, 0);
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.hl-toolbar-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cbd5e1;
+}
+
+.hl-toolbar-colors {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.hl-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid #0f172a;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.hl-color:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.hl-close {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hl-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+}
