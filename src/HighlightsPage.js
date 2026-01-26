@@ -2,6 +2,16 @@ import React, { useMemo, useState } from 'react';
 import './HighlightsPage.css';
 import { useHighlights } from './HighlightContext';
 
+const getFaviconUrl = (url) => {
+  if (!url) return '';
+  try {
+    const host = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+  } catch (e) {
+    return '';
+  }
+};
+
 export default function HighlightsPage() {
   const { highlights, removeHighlight } = useHighlights();
   const [query, setQuery] = useState('');
@@ -67,10 +77,15 @@ export default function HighlightsPage() {
                       rel="noopener noreferrer"
                       className="highlight-card-title link"
                     >
-                      {group.cardTitle}
+                      {getFaviconUrl(group.cardUrl) && (
+                        <img className="highlight-favicon" src={getFaviconUrl(group.cardUrl)} alt="" />
+                      )}
+                      <span className="highlight-title-text">{group.cardTitle}</span>
                     </a>
                   ) : (
-                    <div className="highlight-card-title">{group.cardTitle}</div>
+                    <div className="highlight-card-title">
+                      <span className="highlight-title-text">{group.cardTitle}</span>
+                    </div>
                   )}
                   <div className="highlight-page">
                     {group.page || '—'}
