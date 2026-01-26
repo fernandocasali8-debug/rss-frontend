@@ -15,6 +15,25 @@ export default function HighlightsPage() {
     ));
   }, [highlights, query]);
 
+  const grouped = useMemo(() => {
+    const map = new Map();
+    filtered.forEach((h) => {
+      const key = `${h.cardId || 'page'}|${h.page || ''}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          cardId: h.cardId,
+          cardTitle: h.cardTitle || 'Sem título',
+          cardUrl: h.cardUrl || '',
+          page: h.page || '',
+          items: []
+        });
+      }
+      map.get(key).items.push(h);
+    });
+    return Array.from(map.values());
+  }, [filtered]);
+
   return (
     <div className="highlights-page">
       <div className="highlights-header">
@@ -32,26 +51,46 @@ export default function HighlightsPage() {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      {filtered.length === 0 ? (
+      {grouped.length === 0 ? (
         <div className="highlights-empty">Nenhum sublinhado registrado.</div>
       ) : (
         <div className="highlights-grid">
-          {filtered.map((h) => (
-            <div key={h.id} className="highlight-card">
+          {grouped.map((group) => (
+            <div key={group.key} className="highlight-card">
               <div className="highlight-head">
-                <span className="highlight-dot" style={{ backgroundColor: h.color }} />
+                <span className="highlight-dot" style={{ backgroundColor: group.items[0]?.color || '#94a3b8' }} />
                 <div className="highlight-meta">
-                  <div className="highlight-card-title">{h.cardTitle || 'Sem título'}</div>
-                  <div className="highlight-page">{h.page}</div>
+                  {group.cardUrl ? (
+                    <a
+                      href={group.cardUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="highlight-card-title link"
+                    >
+                      {group.cardTitle}
+                    </a>
+                  ) : (
+                    <div className="highlight-card-title">{group.cardTitle}</div>
+                  )}
+                  <div className="highlight-page">{group.page || '—'}</div>
                 </div>
-                <button className="highlight-remove" onClick={() => removeHighlight(h.id)} aria-label="Remover">
-                  ×
-                </button>
               </div>
-              <div className="highlight-text">{h.text}</div>
+              <div className="highlight-list">
+                {group.items.map((h) => (
+                  <div key={h.id} className="highlight-text-row">
+                    <span className="highlight-bullet" style={{ backgroundColor: h.color }} />
+                    <span className="highlight-text">({h.text})</span>
+                    <button className="highlight-remove" onClick={() => removeHighlight(h.id)} aria-label="Remover">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
               <div className="highlight-foot">
-                <span>{new Date(h.createdAt || Date.now()).toLocaleString('pt-BR')}</span>
-                {h.cardId && <span className="highlight-id">ID: {h.cardId}</span>}
+                <span>
+                  {group.items.length} grifo{group.items.length > 1 ? 's' : ''}
+                </span>
+                {group.cardId && <span className="highlight-id">ID: {group.cardId}</span>}
               </div>
             </div>
           ))}
@@ -60,4 +99,3 @@ export default function HighlightsPage() {
     </div>
   );
 }
-

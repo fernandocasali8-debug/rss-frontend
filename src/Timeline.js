@@ -1131,6 +1131,7 @@ export default function Timeline() {
           data-context-saved={isSaved(item) ? '1' : '0'}
           data-card-id={getItemId(item)}
           data-card-title={item.title || ''}
+          data-card-url={item.link || ''}
         >
           <div className="timeline-post-header">
             <span className="timeline-feed-meta">

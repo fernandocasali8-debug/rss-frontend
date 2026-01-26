@@ -26,10 +26,10 @@ export default function Highlighter() {
     try {
       const span = document.createElement('span');
       span.className = 'hl-underline';
-      span.style.textDecorationColor = color;
-      span.style.textDecorationLine = 'underline';
-      span.style.textDecorationThickness = '2px';
-      span.style.textDecorationSkipInk = 'none';
+      span.style.backgroundColor = `${color}33`; // ~20% opacity
+      span.style.boxShadow = `0 -2px 0 ${color} inset`;
+      span.style.borderRadius = '2px';
+      span.style.padding = '0 1px';
       range.surroundContents(span);
     } catch (e) {
       // Se falhar (seleção cruzando blocos), ignoramos o underline visual imediato.
@@ -38,12 +38,13 @@ export default function Highlighter() {
 
   const saveHighlight = (color) => {
     if (!selectionData) return;
-    const { text, cardId, cardTitle, page, range } = selectionData;
+    const { text, cardId, cardTitle, cardUrl, page, range } = selectionData;
     addHighlight({
       text,
       color,
       cardId,
       cardTitle,
+      cardUrl,
       page,
       createdAt: new Date().toISOString()
     });
@@ -77,6 +78,7 @@ export default function Highlighter() {
       const cardEl = node ? node.closest('[data-card-id], [data-context-id]') : null;
       const cardId = cardEl?.dataset.cardId || cardEl?.dataset.contextId || 'page';
       const cardTitle = cardEl?.dataset.cardTitle || cardEl?.dataset.contextTitle || '';
+      const cardUrl = cardEl?.dataset.cardUrl || cardEl?.dataset.contextUrl || '';
       setSelectionData({
         text,
         rect: {
@@ -87,6 +89,7 @@ export default function Highlighter() {
         },
         cardId,
         cardTitle,
+        cardUrl,
         page: window.location.pathname,
         range
       });
@@ -132,4 +135,3 @@ export default function Highlighter() {
     document.body
   );
 }
-

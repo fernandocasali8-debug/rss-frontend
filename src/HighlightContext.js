@@ -35,6 +35,7 @@ export function HighlightProvider({ children }) {
       page: payload.page || window.location.pathname,
       cardId: payload.cardId || '',
       cardTitle: payload.cardTitle || '',
+      cardUrl: payload.cardUrl || '',
       createdAt: payload.createdAt || new Date().toISOString()
     };
     setHighlights((prev) => [next, ...prev]);
@@ -67,4 +68,3 @@ export function HighlightProvider({ children }) {
 export function useHighlights() {
   return useContext(HighlightContext);
 }
-
