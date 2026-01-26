@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './Timeline.css';
 import { API_BASE, apiFetch } from './api';
 import fallbackFavicon from './fallback-favicon.svg';
+import { useHighlights } from './HighlightContext';
 /* eslint-disable react-hooks/exhaustive-deps */
 
 const REFRESH_MS = 60000;
@@ -130,6 +131,7 @@ export default function Timeline() {
   const [countdown, setCountdown] = useState(Math.ceil(REFRESH_MS / 1000));
   const nextRefreshRef = React.useRef(Date.now() + REFRESH_MS);
   const [savedItems, setSavedItems] = useState([]);
+  const { highlights } = useHighlights();
   const [savingIds, setSavingIds] = useState([]);
   const [query, setQuery] = useState('');
   const [viewMode, setViewMode] = useState('two');
@@ -1094,6 +1096,25 @@ export default function Timeline() {
     setTagModalItem(item);
   }, [getManualTags]);
 
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const applyHighlightsToText = (text, cardId) => {
+    if (!text) return text;
+    const cardHighlights = highlights.filter((h) => h.cardId === cardId);
+    if (!cardHighlights.length) return text;
+    let html = text;
+    cardHighlights.forEach((h) => {
+      const safe = escapeRegex(h.text);
+      if (!safe) return;
+      const regex = new RegExp(`(${safe})`, 'gi');
+      html = html.replace(
+        regex,
+        `<span class="hl-inline" style="background:${h.color}33;box-shadow:0 -2px 0 ${h.color} inset;">$1</span>`
+      );
+    });
+    return html;
+  };
+
   const saveTagsForItem = React.useCallback(() => {
     if (!tagModalItem) return;
     const id = getItemId(tagModalItem);
@@ -1119,17 +1140,18 @@ export default function Timeline() {
       const itemTags = getItemTags(item);
       const favicon = getFaviconUrl(item.feedUrl || item.link);
       const itemImage = item.image || '';
+      const cardId = getItemId(item);
       return (
         <div
           className={`timeline-post ${isRead(item) ? 'is-read' : ''}`}
           key={`n-${idx}`}
           data-context-card="true"
           data-context-type="timeline"
-          data-context-id={getItemId(item)}
+          data-context-id={cardId}
           data-context-url={item.link || ''}
           data-context-title={item.title || ''}
           data-context-saved={isSaved(item) ? '1' : '0'}
-          data-card-id={getItemId(item)}
+          data-card-id={cardId}
           data-card-title={item.title || ''}
           data-card-url={item.link || ''}
         >
@@ -1153,7 +1175,13 @@ export default function Timeline() {
                 <img src={itemImage} alt={item.title || ''} loading="lazy" />
               </a>
             )}
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="timeline-title">{item.title}</a>
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="timeline-title"
+              dangerouslySetInnerHTML={{ __html: applyHighlightsToText(item.title || '', cardId) }}
+            />
             {itemTags.length > 0 && (
               <div className="timeline-tags-inline">
                 {itemTags.map(tag => (
@@ -1161,7 +1189,12 @@ export default function Timeline() {
                 ))}
               </div>
             )}
-            {item.contentSnippet && <div className="timeline-snippet">{item.contentSnippet}</div>}
+            {item.contentSnippet && (
+              <div
+                className="timeline-snippet"
+                dangerouslySetInnerHTML={{ __html: applyHighlightsToText(item.contentSnippet || '', cardId) }}
+              />
+            )}
             {item.sources && item.sources.length > 0 && (
               <div className="timeline-sources">
                 <span className="timeline-sources-label">TambÃƒÂ©m em:</span>
