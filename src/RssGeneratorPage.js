@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './RssGeneratorPage.css';
 import { API_BASE, apiFetch } from './api';
 
-const STALE_MS = 3 * 60 * 60 * 1000;
 const SETTINGS_KEY = 'rss-gen-advanced-settings';
 const DEFAULT_SETTINGS = {
   maxItemsDefault: 25,
