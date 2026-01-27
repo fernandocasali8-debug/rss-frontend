@@ -497,6 +497,8 @@ export default function RssGeneratorPage() {
     addedIds,
     existingFeedUrls,
     handleDelete,
+    handleTestFeed,
+    testStatus,
     items.length
   ]);
 
