@@ -261,8 +261,8 @@
 }
 
 .timeline-chip:hover {
-  background: #cbd5e1;
-  border-color: #94a3b8;
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .timeline-chip.active {
@@ -294,8 +294,8 @@
   padding: 2px 6px;
   font-size: 11px;
   border-radius: 6px;
-  background: #0ea5e9;
-  color: #0b1224;
+  background: var(--accent);
+  color: var(--on-primary, #0b1224);
   font-weight: 700;
   vertical-align: middle;
 }
