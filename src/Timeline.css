@@ -218,8 +218,8 @@
 .timeline-panel {
   flex: 1 1 240px;
   min-width: 220px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
 }
@@ -227,14 +227,14 @@
 .timeline-panel-title {
   font-weight: 700;
   margin-bottom: 8px;
-  color: #0f172a;
+  color: var(--ink);
 }
 
 .timeline-select {
   width: 100%;
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
 }
@@ -246,9 +246,9 @@
 }
 
 .timeline-chip {
-  background: #e2e8f0;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 6px 10px;
   font-size: 12px;
@@ -266,9 +266,9 @@
 }
 
 .timeline-chip.active {
-  background: #0ea5e9;
-  color: #0b1224;
-  border-color: #0ea5e9;
+  background: var(--accent);
+  color: var(--on-primary, #0b1224);
+  border-color: var(--accent);
 }
 
 .timeline-chip.reset {
