@@ -98,9 +98,10 @@ export default function Sidebar({
         aria-hidden={!mobileOpen}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-white/10 bg-[var(--surface)] text-[var(--ink)] shadow-2xl transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-[var(--sidebar-bg)] text-[var(--sidebar-ink)] shadow-2xl transition-transform duration-200 md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${widthClass}`}
+        style={{ borderColor: 'var(--sidebar-border)' }}
       >
         <div className="flex items-center justify-between px-4 py-5">
           <div className="flex items-center gap-3">
@@ -110,7 +111,7 @@ export default function Sidebar({
             {!collapsed && (
               <div>
                 <div className="text-sm font-semibold text-white">Leitor RSS</div>
-                <div className="text-xs text-slate-400">Painel de controle</div>
+                <div className="text-xs text-[var(--sidebar-muted)]">Painel de controle</div>
               </div>
             )}
           </div>
@@ -138,7 +139,10 @@ export default function Sidebar({
           {routes.map((section) => (
             <div key={section.section} className="mb-6">
               {!collapsed && (
-                <div className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <div
+                  className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.24em]"
+                  style={{ color: 'var(--sidebar-muted)' }}
+                >
                   {section.section}
                 </div>
               )}
