@@ -37,6 +37,7 @@ export default function RssGeneratorPage() {
   const [driveStatus, setDriveStatus] = useState({ connected: false, clients: [] });
   const [driveClientId, setDriveClientId] = useState('');
   const [driveExporting, setDriveExporting] = useState(false);
+  const [testStatus, setTestStatus] = useState({});
 
   const fetchGenerated = useCallback(() => {
     setListLoading(true);
@@ -170,6 +171,27 @@ export default function RssGeneratorPage() {
     }
   }, [fetchGenerated]);
 
+  const handleTestFeed = useCallback(async (entry) => {
+    if (!entry?.feedUrl) return;
+    const feedLink = `${API_BASE}${entry.feedUrl}`;
+    setTestStatus((prev) => ({ ...prev, [entry.id]: { status: 'loading', message: 'Testando…' } }));
+    try {
+      const res = await fetch(feedLink, { method: 'GET' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      const ok = text && text.includes('<item>');
+      setTestStatus((prev) => ({
+        ...prev,
+        [entry.id]: { status: ok ? 'ok' : 'warn', message: ok ? 'OK' : 'Sem <item>' }
+      }));
+    } catch (err) {
+      setTestStatus((prev) => ({
+        ...prev,
+        [entry.id]: { status: 'error', message: err.message || 'Erro ao testar' }
+      }));
+    }
+  }, []);
+
   const handleAddFeed = async (entry) => {
     if (!entry?.feedUrl) return;
     setActionState({ id: entry.id, type: 'add' });
@@ -292,6 +314,7 @@ export default function RssGeneratorPage() {
             <span>Itens</span>
             <span>Gerado</span>
             <span>Ações</span>
+            <span>Teste</span>
           </div>
           {filteredItems.map((entry) => {
             const feedUrl = `${API_BASE}${entry.feedUrl || ''}`.toLowerCase();
@@ -312,10 +335,10 @@ export default function RssGeneratorPage() {
                   </div>
                   {isAdded && <span className="rss-gen-tag">No repositório</span>}
                 </div>
-                <span className="rss-gen-table-url">{entry.url}</span>
-                <span className="rss-gen-table-count">{entry.itemsCount || 0}</span>
-                <span>{formatDate(entry.createdAt)}</span>
-                <div className="rss-gen-table-actions">
+              <span className="rss-gen-table-url">{entry.url}</span>
+              <span className="rss-gen-table-count">{entry.itemsCount || 0}</span>
+              <span>{formatDate(entry.createdAt)}</span>
+              <div className="rss-gen-table-actions">
                   <button
                     type="button"
                     className="rss-gen-button small primary"
@@ -354,11 +377,25 @@ export default function RssGeneratorPage() {
                     {actionState.id === entry.id && actionState.type === 'delete' ? 'Removendo' : 'Remover'}
                   </button>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      );
+                <div className="rss-gen-test">
+                  <button
+                    type="button"
+                    className="rss-gen-button small"
+                    onClick={() => handleTestFeed(entry)}
+                  >
+                    Testar
+                  </button>
+                  {testStatus[entry.id]?.status && (
+                    <span className={`rss-gen-tag ${testStatus[entry.id].status}`}>
+                      {testStatus[entry.id].message}
+                    </span>
+                  )}
+                </div>
+            </div>
+          );
+        })}
+      </div>
+    );
     }
 
     return (
@@ -398,6 +435,11 @@ export default function RssGeneratorPage() {
               <div className="rss-gen-card-meta">
                 <span>Gerado em {formatDate(entry.createdAt)}</span>
                 <span className="rss-gen-card-file">{entry.fileName}</span>
+                {testStatus[entry.id]?.status && (
+                  <span className={`rss-gen-tag ${testStatus[entry.id].status}`}>
+                    {testStatus[entry.id].message}
+                  </span>
+                )}
               </div>
               <div className="rss-gen-card-actions">
                 <button
