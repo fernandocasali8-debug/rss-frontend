@@ -98,7 +98,7 @@ export default function Sidebar({
         aria-hidden={!mobileOpen}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-white/10 bg-[#0B1220] text-slate-200 shadow-2xl transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-white/10 bg-[var(--surface)] text-[var(--ink)] shadow-2xl transition-transform duration-200 md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${widthClass}`}
       >
@@ -230,7 +230,7 @@ export default function Sidebar({
                 )}
               </button>
               {!collapsed && accountOpen && (
-                <div className="absolute bottom-12 left-0 right-0 rounded-xl border border-white/10 bg-[#0B1220] p-2 shadow-2xl">
+                <div className="absolute bottom-12 left-0 right-0 rounded-xl border border-white/10 bg-[var(--surface)] p-2 shadow-2xl">
                   <button
                     type="button"
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/10"
@@ -274,7 +274,7 @@ export default function Sidebar({
       </aside>
       {submenu.open && (
         <div
-          className="fixed z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[#0B1220] p-2 shadow-2xl"
+          className="fixed z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[var(--surface)] p-2 shadow-2xl"
           style={{ left: submenu.x, top: submenu.y, transform: 'translateY(-50%)' }}
           onMouseEnter={clearSubmenuTimer}
           onMouseLeave={scheduleCloseSubmenu}

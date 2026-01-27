@@ -16,7 +16,7 @@
 }
 
 [data-theme="dark"] .dashboard-header {
-  background: rgba(17, 21, 27, 0.8);
+  background: rgba(17, 24, 39, 0.85);
 }
 
 .dashboard-header-inner {
@@ -72,8 +72,8 @@
 }
 
 .dashboard-tab.active {
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent-strong);
+  color: var(--on-primary);
   box-shadow: 0 6px 16px rgba(20, 23, 31, 0.2);
 }
 
