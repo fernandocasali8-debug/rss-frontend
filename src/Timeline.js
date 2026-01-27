@@ -826,10 +826,20 @@ export default function Timeline() {
     [filteredPosts, visibleCount]
   );
 
-  const availableSources = React.useMemo(
-    () => Array.from(new Set(posts.map(item => item.feedName).filter(Boolean))).sort(),
-    [posts]
-  );
+  const availableSources = React.useMemo(() => {
+    const map = new Map();
+    posts.forEach((item) => {
+      const name = item.feedName;
+      if (!name) return;
+      const isGenerated = (item.feedUrl || '').includes('/rss/generated/');
+      const type = isGenerated ? 'GER' : 'NAT';
+      const prev = map.get(name);
+      // Se houver mistura, priorize marcar como NAT (nativo) quando qualquer item for nativo
+      const resolvedType = prev ? (prev.type === 'NAT' || type === 'NAT' ? 'NAT' : 'GER') : type;
+      map.set(name, { name, type: resolvedType });
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  }, [posts]);
 
   const currentBrtHour = React.useMemo(() => {
     const h = Number(
@@ -1492,7 +1502,9 @@ export default function Timeline() {
             >
               <option value="all">Todas as fontes</option>
               {availableSources.map(source => (
-                <option key={source} value={source}>{source}</option>
+                <option key={source.name} value={source.name}>
+                  {source.name} · {source.type}
+                </option>
               ))}
             </select>
           </div>
