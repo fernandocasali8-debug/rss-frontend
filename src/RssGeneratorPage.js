@@ -3,6 +3,15 @@ import './RssGeneratorPage.css';
 import { API_BASE, apiFetch } from './api';
 
 const STALE_MS = 3 * 60 * 60 * 1000;
+const SETTINGS_KEY = 'rss-gen-advanced-settings';
+const DEFAULT_SETTINGS = {
+  maxItemsDefault: 25,
+  useAiDefault: true,
+  staleHours: 3,
+  fetchTimeoutMs: 10000,
+  linkDepth: 'normal', // normal | relaxado
+  dateFallback: 'now'  // now | discard
+};
 
 const formatDate = (iso) => {
   if (!iso) return '';
@@ -29,6 +38,7 @@ export default function RssGeneratorPage() {
   const [action, setAction] = useState({ id: '', kind: '' });
   const [preview, setPreview] = useState({ open: false, title: '', items: [], loading: false, error: '' });
   const [query, setQuery] = useState('');
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
   const loadFeeds = useCallback(() => {
     setListLoading(true);
@@ -42,6 +52,19 @@ export default function RssGeneratorPage() {
   useEffect(() => {
     loadFeeds();
   }, [loadFeeds]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+      if (stored) {
+        setSettings({ ...DEFAULT_SETTINGS, ...stored });
+        setMaxItems(stored.maxItemsDefault ?? DEFAULT_SETTINGS.maxItemsDefault);
+        setUseAi(stored.useAiDefault ?? DEFAULT_SETTINGS.useAiDefault);
+      }
+    } catch (e) {
+      setSettings(DEFAULT_SETTINGS);
+    }
+  }, []);
 
   const handleGenerate = async (e) => {
     e.preventDefault();
@@ -122,6 +145,27 @@ export default function RssGeneratorPage() {
     return `${f.title} ${f.url} ${f.fileName}`.toLowerCase().includes(q);
   });
 
+  const saveSettings = (next) => {
+    const merged = { ...settings, ...next };
+    setSettings(merged);
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const resetSettings = () => {
+    setSettings(DEFAULT_SETTINGS);
+    setMaxItems(DEFAULT_SETTINGS.maxItemsDefault);
+    setUseAi(DEFAULT_SETTINGS.useAiDefault);
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS));
+    } catch (e) {
+      // ignore
+    }
+  };
+
   return (
     <div className="rss-gen-page">
       <h2>Gerador RSS</h2>
@@ -176,10 +220,93 @@ export default function RssGeneratorPage() {
         <button type="button" onClick={loadFeeds} disabled={listLoading}>Recarregar lista</button>
       </div>
 
+      <div className="rss-gen-settings">
+        <h3>Configurações avançadas</h3>
+        <div className="rss-gen-settings-grid">
+          <label>
+            Máx. itens padrão
+            <input
+              type="number"
+              min="5"
+              max="100"
+              value={settings.maxItemsDefault}
+              onChange={(e) => {
+                const v = Math.min(100, Math.max(5, Number(e.target.value) || DEFAULT_SETTINGS.maxItemsDefault));
+                saveSettings({ maxItemsDefault: v });
+                setMaxItems(v);
+              }}
+            />
+          </label>
+          <label className="rss-gen-inline">
+            Usar IA por padrão
+            <input
+              type="checkbox"
+              checked={settings.useAiDefault}
+              onChange={(e) => {
+                saveSettings({ useAiDefault: e.target.checked });
+                setUseAi(e.target.checked);
+              }}
+            />
+          </label>
+          <label>
+            Marcar “desatualizado” após (horas)
+            <input
+              type="number"
+              min="1"
+              max="24"
+              value={settings.staleHours}
+              onChange={(e) => {
+                const v = Math.min(24, Math.max(1, Number(e.target.value) || DEFAULT_SETTINGS.staleHours));
+                saveSettings({ staleHours: v });
+              }}
+            />
+          </label>
+          <label>
+            Timeout de fetch (ms)
+            <input
+              type="number"
+              min="3000"
+              max="30000"
+              step="500"
+              value={settings.fetchTimeoutMs}
+              onChange={(e) => {
+                const v = Math.min(30000, Math.max(3000, Number(e.target.value) || DEFAULT_SETTINGS.fetchTimeoutMs));
+                saveSettings({ fetchTimeoutMs: v });
+              }}
+            />
+          </label>
+          <label>
+            Filtro de profundidade de link
+            <select
+              value={settings.linkDepth}
+              onChange={(e) => saveSettings({ linkDepth: e.target.value })}
+            >
+              <option value="normal">Normal</option>
+              <option value="relaxado">Relaxado</option>
+            </select>
+          </label>
+          <label>
+            Falta de data em item
+            <select
+              value={settings.dateFallback}
+              onChange={(e) => saveSettings({ dateFallback: e.target.value })}
+            >
+              <option value="now">Usar data atual</option>
+              <option value="discard">Descartar item</option>
+            </select>
+          </label>
+        </div>
+        <div className="rss-gen-settings-actions">
+          <button type="button" onClick={resetSettings}>Default</button>
+          <span className="rss-gen-note">Padrão atual: max {settings.maxItemsDefault}, IA {settings.useAiDefault ? 'ligada' : 'desligada'}, stale {settings.staleHours}h.</span>
+        </div>
+      </div>
+
       <div className="rss-gen-list">
         {filtered.map((feed) => {
           const updated = feed.updatedAt || feed.createdAt;
-          const stale = updated ? (Date.now() - Date.parse(updated)) > STALE_MS : true;
+          const staleLimit = (settings.staleHours || 3) * 60 * 60 * 1000;
+          const stale = updated ? (Date.now() - Date.parse(updated)) > staleLimit : true;
           return (
             <div key={feed.id} className={`rss-gen-card-mini ${stale ? 'is-stale' : ''}`}>
               <div className="rss-gen-card-title">{feed.title || feed.url}</div>
