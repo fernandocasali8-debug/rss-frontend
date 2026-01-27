@@ -12,6 +12,15 @@ const getFaviconUrl = (url) => {
   }
 };
 
+const getHost = (url) => {
+  if (!url) return '';
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch (e) {
+    return '';
+  }
+};
+
 export default function HighlightsPage() {
   const { highlights, removeHighlight } = useHighlights();
   const [query, setQuery] = useState('');
@@ -88,7 +97,7 @@ export default function HighlightsPage() {
                     </div>
                   )}
                   <div className="highlight-page">
-                    {group.page || '—'}
+                    {getHost(group.cardUrl) || group.page || '—'}
                     {group.cardId ? ` · ID ${group.cardId}` : ''}
                   </div>
                 </div>

@@ -182,7 +182,7 @@
 
 .timeline-view-button.active {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-primary, #fff);
 }
 
 .timeline-search-clear:disabled {
@@ -277,14 +277,15 @@
 }
 
 .timeline-chip-count {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.08);
   padding: 2px 6px;
   border-radius: 10px;
   font-size: 11px;
+  color: var(--on-primary, #fff);
 }
 
 .timeline-chip-empty {
-  color: var(--muted, #cbd5f5);
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -315,7 +316,7 @@
 .timeline-progress-bar {
   position: relative;
   height: 8px;
-  background: #dfe6f2;
+  background: var(--surface-2);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 999px;
   overflow: hidden;
@@ -371,8 +372,8 @@
   padding: 1px 5px;
   font-size: 10px;
   font-weight: 700;
-  color: #fff;
-  background: #ef4444;
+  color: var(--on-primary, #fff);
+  background: var(--danger);
   border-radius: 999px;
   min-width: 16px;
   min-height: 14px;
@@ -391,7 +392,7 @@
 
 .timeline-tag.active {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-primary, #fff);
   border-color: transparent;
 }
 
@@ -667,7 +668,7 @@
 
 .timeline-action.primary {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-primary, #fff);
   border-color: transparent;
 }
 
@@ -693,13 +694,7 @@
 
 .timeline-save.is-saved {
   background: var(--accent);
-  color: #fff;
-  border-color: transparent;
-}
-
-.timeline-save.is-saved {
-  background: var(--accent);
-  color: #fff;
+  color: var(--on-primary, #fff);
   border-color: transparent;
 }
 
@@ -758,7 +753,7 @@
 }
 
 .timeline-ai-error {
-  color: #b42318;
+  color: var(--danger-ink);
 }
 
 .timeline-ai-text {
@@ -1246,7 +1241,7 @@
 }
 
 .timeline-trends-status.is-error {
-  color: #b42318;
+  color: var(--danger-ink);
 }
 
 .timeline-trend-item {
