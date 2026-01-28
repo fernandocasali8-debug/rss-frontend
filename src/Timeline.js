@@ -1675,6 +1675,9 @@ export default function Timeline() {
                     <button className="timeline-ai-chip" onClick={() => handleRewrite(aiModalItem)}>
                       Regerar jornalistico
                     </button>
+                    <button className="timeline-ai-chip" onClick={() => handleRewrite(aiModalItem, 'deep')}>
+                      Aprofundar
+                    </button>
                     <button className="timeline-ai-chip" onClick={() => handleRewrite(aiModalItem, 'twitter')}>
                       Gerar para X/Twitter
                     </button>
