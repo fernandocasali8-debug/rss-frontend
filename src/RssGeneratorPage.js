@@ -328,10 +328,17 @@ export default function RssGeneratorPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => refreshFeed(feed)}
+                  onClick={() => refreshFeed(feed, { useAi: true })}
                   disabled={action.id === feed.id && action.kind === 'refresh'}
                 >
                   {action.id === feed.id && action.kind === 'refresh' ? 'Atualizando...' : 'Atualizar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => refreshFeed(feed, { useAi: true, strictAi: true })}
+                  disabled={action.id === feed.id && action.kind === 'remap'}
+                >
+                  {action.id === feed.id && action.kind === 'remap' ? 'Remapeando...' : 'Remap'}
                 </button>
               </div>
             </div>
