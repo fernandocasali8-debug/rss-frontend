@@ -27,6 +27,15 @@ const ADMIN_PATH_TO_KEY = ADMIN_ROUTES.reduce((acc, route) => {
   return acc;
 }, {});
 
+const ADMIN_GUEST = {
+  id: 'guest-admin',
+  name: 'Administrador',
+  email: 'admin@local',
+  role: 'admin',
+  plan: 'enterprise',
+  approved: true
+};
+
 function getAdminRouteFromPath() {
   const path = window.location.pathname.replace(/\/+$/, '');
   if (!path.startsWith('/admin')) return 'overview';
@@ -781,8 +790,8 @@ function AdminUsersPage({
 
 export default function AdminApp() {
   const [adminPage, setAdminPage] = useState(getAdminRouteFromPath());
-  const [authUser, setAuthUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(ADMIN_GUEST);
+  const [authLoading, setAuthLoading] = useState(false);
   const [metrics, setMetrics] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [feeds, setFeeds] = useState([]);
@@ -843,13 +852,14 @@ export default function AdminApp() {
   }, []);
 
   useEffect(() => {
+    setAuthLoading(true);
     apiFetch(API_BASE + '/auth/me')
       .then((res) => res.json())
       .then((data) => {
-        setAuthUser(data?.user || null);
+        setAuthUser(data?.user || ADMIN_GUEST);
       })
       .catch(() => {
-        setAuthUser(null);
+        setAuthUser(ADMIN_GUEST);
       })
       .finally(() => setAuthLoading(false));
   }, []);
@@ -1249,87 +1259,13 @@ export default function AdminApp() {
     } catch (err) {
       // ignore
     } finally {
-      setAuthUser(null);
+      setAuthUser(ADMIN_GUEST);
     }
   };
 
   const handleLogin = () => {
-    const params = new URLSearchParams();
-    params.set('redirect', '/admin');
-    window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
+    setAuthUser(ADMIN_GUEST);
   };
-
-  if (!authLoading && !authUser) {
-    return (
-      <div className="auth-screen">
-        <div className="auth-shell">
-          <div className="auth-hero">
-            <div className="auth-brand">
-              <div className="auth-logo">ADM</div>
-              <div>
-                <div className="auth-title">Gestor do sistema</div>
-                <div className="auth-subtitle">Acesso restrito para administracao.</div>
-              </div>
-            </div>
-            <div className="auth-caption">
-              Conecte sua conta para acessar as operacoes administrativas.
-            </div>
-            <div className="auth-features">
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Governanca</strong>
-                  <span>Controle de acessos e auditoria.</span>
-                </div>
-              </div>
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Operacoes</strong>
-                  <span>Monitoramento e resiliencia.</span>
-                </div>
-              </div>
-              <div className="auth-feature">
-                <span className="auth-feature-dot" />
-                <div>
-                  <strong>Compliance</strong>
-                  <span>Politicas e trilhas criticas.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="auth-card">
-            <div className="auth-card-title">Entrar no admin</div>
-            <div className="auth-card-subtitle">Use sua conta Google para autenticar.</div>
-            <button type="button" className="auth-button" onClick={handleLogin}>
-              <span className="auth-google-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M21.35 11.1H12v2.9h5.35c-.24 1.3-1.48 3.82-5.35 3.82-3.22 0-5.85-2.66-5.85-5.92S8.78 5.98 12 5.98c1.83 0 3.06.78 3.76 1.46l2.56-2.46C16.69 3.44 14.58 2.5 12 2.5 7.73 2.5 4.25 6.03 4.25 10.9S7.73 19.3 12 19.3c4.1 0 6.83-2.88 6.83-6.94 0-.47-.05-.82-.13-1.26Z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M5.9 14.22 5.06 14.9 3.2 16.26C4.33 18.44 6.96 19.9 10 19.9c2.58 0 4.69-.85 6.25-2.3l-2.6-2.02c-.7.48-1.64.82-3.65.82-2.6 0-4.8-1.74-5.57-4.11Z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M3.2 7.98c-.27.83-.42 1.72-.42 2.62s.15 1.8.42 2.62l2.7-2.08-.08-.56.08-.56Z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M10 5.02c1.4 0 2.64.48 3.63 1.4l2.63-2.54C14.68 2.24 12.57 1.5 10 1.5 6.96 1.5 4.33 2.96 3.2 5.14l2.7 2.08C6.57 5.86 7.4 5.02 10 5.02Z"
-                  />
-                </svg>
-              </span>
-              Continuar com Google
-            </button>
-            <div className="auth-card-footer">Apenas contas autorizadas.</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!authLoading && authUser && authUser.role !== 'admin') {
     return (

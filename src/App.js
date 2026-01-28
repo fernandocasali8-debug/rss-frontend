@@ -51,6 +51,14 @@ import {
 const THEME_KEY = 'rss-theme';
 const CONTEXT_MENU_KEY = 'rss-context-menu-config';
 const APP_VERSION = process.env.REACT_APP_VERSION || 'v0.1.0';
+const GUEST_USER = {
+  id: 'guest',
+  name: 'Convidado',
+  email: 'guest@local',
+  role: 'admin',
+  plan: 'enterprise',
+  approved: true
+};
 const DEFAULT_CONTEXT_MENU = {
   enabled: true,
   shortcutsEnabled: true,
@@ -173,8 +181,8 @@ function MainApp({ initialPage }) {
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState('');
-  const [authUser, setAuthUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(GUEST_USER);
+  const [authLoading, setAuthLoading] = useState(false);
   const [teamAdminEnabled] = useState(false);
   const [teamMemberTag] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -272,18 +280,20 @@ function MainApp({ initialPage }) {
   }, [theme]);
 
   useEffect(() => {
+    setAuthLoading(true);
     apiFetch(API_BASE + '/auth/me')
       .then(res => res.json())
       .then(data => {
-        setAuthUser(data?.user || null);
-        if (data?.user?.id) {
-          localStorage.setItem('rss-user-id', data.user.id);
+        const user = data?.user || GUEST_USER;
+        setAuthUser(user);
+        if (user?.id) {
+          localStorage.setItem('rss-user-id', user.id);
         } else {
           localStorage.removeItem('rss-user-id');
         }
       })
       .catch(() => {
-        setAuthUser(null);
+        setAuthUser(GUEST_USER);
         localStorage.removeItem('rss-user-id');
       })
       .finally(() => {
@@ -437,13 +447,7 @@ function MainApp({ initialPage }) {
   };
 
   const handleLogin = () => {
-    const params = new URLSearchParams();
-    if (rememberMe) {
-      params.set('remember', '1');
-    }
-    params.set('redirect', '/app');
-    params.set('prompt', 'select_account');
-    window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
+    setAuthUser(GUEST_USER);
   };
 
   const handleLogout = async () => {
@@ -454,7 +458,7 @@ function MainApp({ initialPage }) {
     } catch (e) {
       // ignore
     } finally {
-      setAuthUser(null);
+      setAuthUser(GUEST_USER);
       localStorage.removeItem('rss-auth-token');
       sessionStorage.removeItem('rss-auth-token');
       localStorage.removeItem('rss-user-id');
@@ -467,14 +471,10 @@ function MainApp({ initialPage }) {
     } catch (e) {
       // ignore
     } finally {
-      setAuthUser(null);
+      setAuthUser(GUEST_USER);
       localStorage.removeItem('rss-auth-token');
       sessionStorage.removeItem('rss-auth-token');
       localStorage.removeItem('rss-user-id');
-      const params = new URLSearchParams();
-      params.set('redirect', '/app');
-      params.set('prompt', 'select_account');
-      window.location.href = `${API_BASE}/auth/google?${params.toString()}`;
     }
   };
 
@@ -613,51 +613,6 @@ function MainApp({ initialPage }) {
         onLogout={handleLogout}
         userEmail={authUser.email}
       />
-    );
-  }
-
-  if (!authUser) {
-    return (
-      <div className="auth-screen">
-        <div className="auth-shell">
-          <div className="auth-card">
-            <div className="auth-card-title">Entrar no sistema</div>
-            <div className="auth-card-subtitle">Use sua conta Google para autenticar.</div>
-            <label className="auth-remember">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-              />
-              Manter conectado
-            </label>
-            <button type="button" className="auth-button" onClick={handleLogin}>
-              <span className="auth-google-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M21.35 11.1H12v2.9h5.35c-.24 1.3-1.48 3.82-5.35 3.82-3.22 0-5.85-2.66-5.85-5.92S8.78 5.98 12 5.98c1.83 0 3.06.78 3.76 1.46l2.56-2.46C16.69 3.44 14.58 2.5 12 2.5 7.73 2.5 4.25 6.03 4.25 10.9S7.73 19.3 12 19.3c4.1 0 6.83-2.88 6.83-6.94 0-.47-.05-.82-.13-1.26Z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M5.9 14.22 5.06 14.9 3.2 16.26C4.33 18.44 6.96 19.9 10 19.9c2.58 0 4.69-.85 6.25-2.3l-2.6-2.02c-.7.48-1.64.82-3.65.82-2.6 0-4.8-1.74-5.57-4.11Z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M3.2 7.98c-.27.83-.42 1.72-.42 2.62s.15 1.8.42 2.62l2.7-2.08-.08-.56.08-.56Z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M10 5.02c1.4 0 2.64.48 3.63 1.4l2.63-2.54C14.68 2.24 12.57 1.5 10 1.5 6.96 1.5 4.33 2.96 3.2 5.14l2.7 2.08C6.57 5.86 7.4 5.02 10 5.02Z"
-                  />
-                </svg>
-              </span>
-              Continuar com Google
-            </button>
-            <div className="auth-card-footer">Ao continuar, voce aceita nossos termos.</div>
-          </div>
-        </div>
-      </div>
     );
   }
 
