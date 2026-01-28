@@ -34,6 +34,13 @@ export default function PublicSite({ slug }) {
   const [items, setItems] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const fallbackConfig = React.useMemo(() => ({
+    title: 'Reescritas',
+    subtitle: 'Feed público',
+    slug: slug || 'default',
+    logo: '📰',
+    themeMode: 'dark'
+  }), [slug]);
 
   React.useEffect(() => {
     if (!slug) return;
@@ -45,14 +52,14 @@ export default function PublicSite({ slug }) {
         const data = await res.json();
         if (active) setConfig(data);
       } catch (err) {
-        if (active) setError('Nao foi possivel carregar o site.');
+        if (active) setConfig(fallbackConfig);
       }
     };
     fetchConfig();
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, fallbackConfig]);
 
   React.useEffect(() => {
     if (!slug) return;
@@ -67,9 +74,20 @@ export default function PublicSite({ slug }) {
           setLoading(false);
         }
       } catch (err) {
-        if (active) {
-          setError('Nao foi possivel carregar as noticias.');
-          setLoading(false);
+        try {
+          const res = await apiFetch(`${API_BASE}/aggregate`);
+          const data = await res.json();
+          if (!res.ok) throw new Error();
+          if (active) {
+            setItems(Array.isArray(data) ? data : []);
+            setLoading(false);
+            setError('');
+          }
+        } catch (e2) {
+          if (active) {
+            setError('Nao foi possivel carregar as noticias.');
+            setLoading(false);
+          }
         }
       }
     };
