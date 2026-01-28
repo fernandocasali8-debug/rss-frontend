@@ -113,6 +113,7 @@ export default function PublicSite({ slug }) {
   }
 
   const featured = items[0];
+  const gridItems = items.slice(1, 40);
   const latestList = items.slice(1, 7);
 
   return (
