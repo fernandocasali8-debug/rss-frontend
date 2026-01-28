@@ -92,7 +92,7 @@ export default function PublicSite({ slug }) {
         '--site-border': hexToRgba(config.textColor, isLight ? 0.12 : 0.2),
         '--site-muted': hexToRgba(config.textColor, isLight ? 0.65 : 0.6),
         '--site-hover': hexToRgba(config.textColor, isLight ? 0.06 : 0.08),
-        '--site-font': config.fontFamily || '"Segoe UI", "Helvetica Neue", Arial, sans-serif'
+        '--site-font': config.fontFamily || '"Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif'
       }
     : {};
 
@@ -168,31 +168,43 @@ export default function PublicSite({ slug }) {
             <div className="public-site-empty">Nenhuma noticia encontrada.</div>
           )}
           {!loading && items.length > 0 && (
-            <div className="public-site-feed">
-              {items.map((item, idx) => (
-                <article key={`${item.link}-${idx}`} className="public-site-post">
-                  <div className="public-site-card-header">
-                    <span className="public-site-card-feed">{item.feedName}</span>
-                    <span className="public-site-card-date">{formatDateTime(item.pubDate || item.isoDate)}</span>
-                  </div>
-                  <a href={item.link} className="public-site-card-title" target="_blank" rel="noopener noreferrer">
-                    {item.title}
-                  </a>
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="public-site-tags">
-                      {item.tags.map(tag => (
-                        <span key={`${item.title}-${tag}`} className="public-site-tag">
-                          {tag}
-                        </span>
-                      ))}
+            <>
+              {featured && (
+                <section className="public-hero">
+                  <div className="public-hero-content">
+                    <div className="public-site-pill">{featured.feedName}</div>
+                    <h1 className="public-hero-title">{featured.title}</h1>
+                    <p className="public-hero-snippet">{featured.contentSnippet}</p>
+                    <div className="public-hero-meta">
+                      <span>{formatDateTime(featured.pubDate || featured.isoDate)}</span>
+                      <a href={featured.link} target="_blank" rel="noreferrer" className="public-hero-link">
+                        Ler agora
+                      </a>
                     </div>
-                  )}
-                  {item.contentSnippet && (
-                    <div className="public-site-card-snippet">{item.contentSnippet}</div>
-                  )}
-                </article>
-              ))}
-            </div>
+                  </div>
+                  <div className="public-hero-overlay" />
+                </section>
+              )}
+
+              <section className="public-grid-modern">
+                {gridItems.map((item, idx) => (
+                  <article
+                    key={`${item.link}-${idx}`}
+                    className={`public-card modern ${idx % 7 === 0 ? 'wide' : ''}`}
+                  >
+                    <div className="public-card-meta">
+                      <span className="public-card-feed">{item.feedName}</span>
+                      <span className="public-card-date">{formatDateTime(item.pubDate || item.isoDate)}</span>
+                    </div>
+                    <h3 className="public-card-title">{item.title}</h3>
+                    <p className="public-card-snippet">{item.contentSnippet}</p>
+                    <a className="public-card-link" href={item.link} target="_blank" rel="noreferrer">
+                      Abrir notícia
+                    </a>
+                  </article>
+                ))}
+              </section>
+            </>
           )}
         </main>
 
