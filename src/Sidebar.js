@@ -278,12 +278,12 @@ export default function Sidebar({
       </aside>
       {submenu.open && (
         <div
-          className="fixed z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[var(--surface)] p-2 shadow-2xl"
+          className="fixed z-[60] min-w-[220px] rounded-xl border border-slate-700/60 bg-[#0f172a]/95 text-slate-100 p-2 shadow-2xl backdrop-blur-sm"
           style={{ left: submenu.x, top: submenu.y, transform: 'translateY(-50%)' }}
           onMouseEnter={clearSubmenuTimer}
           onMouseLeave={scheduleCloseSubmenu}
         >
-          <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300">
             {submenu.title}
           </div>
           <div className="space-y-1">
@@ -295,8 +295,8 @@ export default function Sidebar({
                   type="button"
                   className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
                     subActive
-                      ? 'bg-white/10 text-white'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      ? 'bg-slate-800/70 text-white'
+                      : 'text-slate-200 hover:bg-slate-800/70'
                   }`}
                   onClick={() => {
                     onSelect(sub.routeKey || sub.key);
@@ -313,6 +313,7 @@ export default function Sidebar({
     </>
   );
 }
+
 
 
 
